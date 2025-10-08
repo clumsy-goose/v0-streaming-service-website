@@ -1,0 +1,86 @@
+"use client"
+
+import { Card } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { ChevronLeft, ChevronRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
+
+const channels = [
+  {
+    name: "News 1",
+    time: "00:37-01:22",
+    program: "Morning Headlines",
+    status: "live",
+  },
+  {
+    name: "News 2",
+    time: "01:00-02:00",
+    program: "World Report",
+    status: "upcoming",
+  },
+  {
+    name: "Finance",
+    time: "01:00-02:00",
+    program: "Market Watch",
+    status: "upcoming",
+  },
+  {
+    name: "Sports",
+    time: "00:23-01:30",
+    program: "Game Highlights",
+    status: "upcoming",
+  },
+  {
+    name: "Entertainment",
+    time: "01:00-04:00",
+    program: "Celebrity Talk",
+    status: "upcoming",
+  },
+  {
+    name: "Movies",
+    time: "00:37-02:19",
+    program: "Classic Cinema",
+    status: "upcoming",
+  },
+]
+
+export function ChannelCarousel() {
+  return (
+    <div className="mt-8 space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Channels</h2>
+        <div className="flex gap-2">
+          <Button variant="ghost" size="icon">
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="icon">
+            <ChevronRight className="h-5 w-5" />
+          </Button>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        {channels.map((channel, index) => (
+          <Card key={index} className="p-4 hover:bg-secondary/50 transition-colors cursor-pointer">
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="h-10 w-10 rounded bg-destructive flex items-center justify-center text-sm font-bold">
+                  {channel.name.charAt(0)}
+                </div>
+                <div>
+                  <h3 className="font-semibold text-sm">{channel.name}</h3>
+                  <p className="text-xs text-muted-foreground">{channel.time}</p>
+                </div>
+              </div>
+              {channel.status === "live" && (
+                <Badge variant="destructive" className="text-xs">
+                  LIVE
+                </Badge>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground">{channel.program}</p>
+          </Card>
+        ))}
+      </div>
+    </div>
+  )
+}
