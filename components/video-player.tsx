@@ -1,60 +1,193 @@
 "use client"
 
+import type React from "react"
+
+import { useEffect, useRef, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Play, Volume2, Maximize, Settings, Share2, Bookmark } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
+import { Play, Pause, Volume2, VolumeX, Maximize, Settings } from "lucide-react"
 
-export function VideoPlayer() {
+interface VideoPlayerProps {
+  channel: string
+  programTime?: string
+}
+
+export function VideoPlayer({ channel, programTime }: VideoPlayerProps) {
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const hlsRef = useRef<any>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [isMuted, setIsMuted] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [duration, setDuration] = useState(0)
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    const cleanup = () => {
+      if (hlsRef.current) {
+        console.log("[v0] Destroying previous HLS instance")
+        hlsRef.current.destroy()
+        hlsRef.current = null
+      }
+    }
+
+    cleanup()
+
+    const hlsUrl = `https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8`
+
+    if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      video.src = hlsUrl
+      console.log("[v0] Loading HLS stream natively for", channel, programTime)
+    } else if (typeof window !== "undefined") {
+      import("hls.js").then(({ default: Hls }) => {
+        if (Hls.isSupported()) {
+          const hls = new Hls({
+            enableWorker: true,
+            lowLatencyMode: false,
+          })
+          hlsRef.current = hls
+
+          hls.loadSource(hlsUrl)
+          hls.attachMedia(video)
+
+          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            console.log("[v0] HLS manifest loaded for", channel, programTime)
+          })
+
+          hls.on(Hls.Events.ERROR, (event, data) => {
+            if (data.fatal) {
+              console.log("[v0] Fatal HLS error:", data)
+              switch (data.type) {
+                case Hls.ErrorTypes.NETWORK_ERROR:
+                  hls.startLoad()
+                  break
+                case Hls.ErrorTypes.MEDIA_ERROR:
+                  hls.recoverMediaError()
+                  break
+                default:
+                  cleanup()
+                  break
+              }
+            }
+          })
+        }
+      })
+    }
+
+    return cleanup
+  }, [channel, programTime])
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    const handleTimeUpdate = () => setCurrentTime(video.currentTime)
+    const handleLoadedMetadata = () => setDuration(video.duration)
+
+    video.addEventListener("timeupdate", handleTimeUpdate)
+    video.addEventListener("loadedmetadata", handleLoadedMetadata)
+
+    return () => {
+      video.removeEventListener("timeupdate", handleTimeUpdate)
+      video.removeEventListener("loadedmetadata", handleLoadedMetadata)
+    }
+  }, [])
+
+  const togglePlay = () => {
+    const video = videoRef.current
+    if (!video) return
+
+    if (isPlaying) {
+      video.pause()
+    } else {
+      video.play()
+    }
+    setIsPlaying(!isPlaying)
+  }
+
+  const toggleMute = () => {
+    const video = videoRef.current
+    if (!video) return
+
+    video.muted = !isMuted
+    setIsMuted(!isMuted)
+  }
+
+  const toggleFullscreen = () => {
+    const video = videoRef.current
+    if (!video) return
+
+    if (document.fullscreenElement) {
+      document.exitFullscreen()
+    } else {
+      video.requestFullscreen()
+    }
+  }
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const video = videoRef.current
+    if (!video) return
+
+    const time = Number.parseFloat(e.target.value)
+    video.currentTime = time
+    setCurrentTime(time)
+  }
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = Math.floor(seconds % 60)
+    return `${mins}:${secs.toString().padStart(2, "0")}`
+  }
+
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0
+
   return (
     <Card className="overflow-hidden">
       <div className="relative aspect-video bg-black">
-        <img
-          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Clipboard_Screenshot_1759918128-Zjwa9tISQaEaKHIlPeNsrjxmAsB9pc.png"
-          alt="Video player"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-        <div className="absolute top-4 left-4">
-          <Badge variant="destructive" className="gap-1">
-            <span className="h-2 w-2 rounded-full bg-white animate-pulse" />
-            LIVE
-          </Badge>
-        </div>
+        <video ref={videoRef} className="w-full h-full" playsInline />
+
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+
         <div className="absolute bottom-0 left-0 right-0 p-4 space-y-2">
-          <div className="h-1 bg-white/20 rounded-full overflow-hidden">
-            <div className="h-full w-1/3 bg-destructive rounded-full" />
-          </div>
+          <input
+            type="range"
+            min="0"
+            max={duration || 0}
+            value={currentTime}
+            onChange={handleSeek}
+            className="w-full h-1 bg-white/20 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-destructive"
+            style={{
+              background: `linear-gradient(to right, hsl(var(--destructive)) ${progress}%, rgba(255,255,255,0.2) ${progress}%)`,
+            }}
+          />
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Button size="icon" variant="ghost" className="h-9 w-9">
-                <Play className="h-5 w-5" />
+              <Button size="icon" variant="ghost" className="h-9 w-9 text-white hover:bg-white/20" onClick={togglePlay}>
+                {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
               </Button>
-              <Button size="icon" variant="ghost" className="h-9 w-9">
-                <Volume2 className="h-5 w-5" />
+              <Button size="icon" variant="ghost" className="h-9 w-9 text-white hover:bg-white/20" onClick={toggleMute}>
+                {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
               </Button>
-              <span className="text-sm text-white">12:35 / 45:20</span>
+              <span className="text-sm text-white">
+                {formatTime(currentTime)} / {formatTime(duration)}
+              </span>
             </div>
             <div className="flex items-center gap-2">
-              <Button size="icon" variant="ghost" className="h-9 w-9">
+              <Button size="icon" variant="ghost" className="h-9 w-9 text-white hover:bg-white/20">
                 <Settings className="h-5 w-5" />
               </Button>
-              <Button size="icon" variant="ghost" className="h-9 w-9">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-9 w-9 text-white hover:bg-white/20"
+                onClick={toggleFullscreen}
+              >
                 <Maximize className="h-5 w-5" />
               </Button>
             </div>
           </div>
         </div>
-      </div>
-      <div className="p-4 flex items-center gap-2">
-        <Button variant="outline" size="sm" className="gap-2 bg-transparent">
-          <Share2 className="h-4 w-4" />
-          Share
-        </Button>
-        <Button variant="outline" size="sm" className="gap-2 bg-transparent">
-          <Bookmark className="h-4 w-4" />
-          Save
-        </Button>
       </div>
     </Card>
   )

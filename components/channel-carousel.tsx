@@ -4,6 +4,8 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useState } from "react"
+import { cn } from "@/lib/utils"
 
 const channels = [
   {
@@ -44,23 +46,58 @@ const channels = [
   },
 ]
 
-export function ChannelCarousel() {
+interface ChannelCarouselProps {
+  selectedChannel: string
+  onChannelSelect: (channel: string) => void
+  onChannelClick?: (channel: string) => void
+}
+
+export function ChannelCarousel({ selectedChannel, onChannelSelect, onChannelClick }: ChannelCarouselProps) {
+  const [currentPage, setCurrentPage] = useState(0)
+  const itemsPerPage = 6
+
+  const totalPages = Math.ceil(channels.length / itemsPerPage)
+  const startIndex = currentPage * itemsPerPage
+  const visibleChannels = channels.slice(startIndex, startIndex + itemsPerPage)
+
+  const handlePrev = () => {
+    setCurrentPage((prev) => Math.max(0, prev - 1))
+  }
+
+  const handleNext = () => {
+    setCurrentPage((prev) => Math.min(totalPages - 1, prev + 1))
+  }
+
+  const handleChannelClick = (channelName: string) => {
+    onChannelSelect(channelName)
+    if (onChannelClick) {
+      onChannelClick(channelName)
+    }
+  }
+
   return (
-    <div className="mt-8 space-y-4">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Channels</h2>
         <div className="flex gap-2">
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" onClick={handlePrev} disabled={currentPage === 0}>
             <ChevronLeft className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" onClick={handleNext} disabled={currentPage === totalPages - 1}>
             <ChevronRight className="h-5 w-5" />
           </Button>
         </div>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {channels.map((channel, index) => (
-          <Card key={index} className="p-4 hover:bg-secondary/50 transition-colors cursor-pointer">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 transition-all duration-300">
+        {visibleChannels.map((channel, index) => (
+          <Card
+            key={startIndex + index}
+            onClick={() => handleChannelClick(channel.name)}
+            className={cn(
+              "p-4 hover:bg-secondary/50 transition-colors cursor-pointer",
+              selectedChannel === channel.name && "ring-2 ring-primary bg-secondary/30",
+            )}
+          >
             <div className="flex items-start justify-between mb-2">
               <div className="flex items-center gap-2">
                 <div className="h-10 w-10 rounded bg-destructive flex items-center justify-center text-sm font-bold">

@@ -2,57 +2,17 @@
 
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 
-const channels = [
-  {
-    id: 1,
-    name: "News 1",
-    logo: "N1",
-    time: "00:37-01:22",
-    currentShow: "Morning Headlines",
-  },
-  {
-    id: 2,
-    name: "News 2",
-    logo: "N2",
-    time: "01:00-02:00",
-    currentShow: "World Report",
-  },
-  {
-    id: 3,
-    name: "Finance",
-    logo: "FN",
-    time: "01:00-02:00",
-    currentShow: "Market Analysis",
-  },
-  {
-    id: 4,
-    name: "Sports",
-    logo: "SP",
-    time: "00:23-01:30",
-    currentShow: "Game Highlights",
-  },
-  {
-    id: 5,
-    name: "Entertainment",
-    logo: "EN",
-    time: "01:00-04:00",
-    currentShow: "Celebrity Talk",
-  },
-  {
-    id: 6,
-    name: "Movies",
-    logo: "MV",
-    time: "00:37-02:19",
-    currentShow: "Classic Cinema",
-  },
-]
+interface DayPlaylistProps {
+  channel: string
+  date: string
+  currentTime: string
+}
 
 function generateScheduleForDate(channel: string, date: string) {
-  // Use date to create variation in programs
   const dateObj = new Date(date)
   const dayOfWeek = dateObj.getDay()
   const dateNum = dateObj.getDate()
@@ -120,14 +80,10 @@ function generateScheduleForDate(channel: string, date: string) {
 
   return templates.map((template, index) => {
     const [hour, minute] = template.timeBase.split(":").map(Number)
-
-    // Add variation based on date
     const episodeNum = ((dateNum * 10 + index + dayOfWeek) % 500) + 1
     const variation = dayOfWeek % 3
 
     let title = template.titleTemplate
-
-    // Add date-specific variations to titles
     if (variation === 0) {
       title = `${template.titleTemplate} - Episode ${episodeNum}`
     } else if (variation === 1) {
@@ -136,7 +92,6 @@ function generateScheduleForDate(channel: string, date: string) {
       title = `${template.titleTemplate} - ${dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
     }
 
-    // Determine status based on current time (only for today's date)
     const isToday = dateObj.toDateString() === new Date().toDateString()
     let status = "upcoming"
 
@@ -158,77 +113,44 @@ function generateScheduleForDate(channel: string, date: string) {
   })
 }
 
-interface ScheduleGridProps {
-  selectedDate: string
-  selectedChannel: string
-  onChannelSelect: (channel: string) => void
-}
-
-export function ScheduleGrid({ selectedDate, selectedChannel, onChannelSelect }: ScheduleGridProps) {
-  const schedule = generateScheduleForDate(selectedChannel, selectedDate)
+export function DayPlaylist({ channel, date, currentTime }: DayPlaylistProps) {
+  const programs = generateScheduleForDate(channel, date)
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-      <div className="lg:col-span-1 space-y-4">
-        <h2 className="text-xl font-semibold mb-4">Channels</h2>
-        {channels.map((channel) => (
-          <Card
-            key={channel.id}
-            onClick={() => onChannelSelect(channel.name)}
-            className={cn(
-              "p-4 hover:bg-secondary/50 transition-colors cursor-pointer",
-              selectedChannel === channel.name && "ring-2 ring-primary bg-secondary/30",
-            )}
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="h-12 w-12 rounded bg-destructive flex items-center justify-center font-bold">
-                {channel.logo}
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold">{channel.name}</h3>
-                <p className="text-xs text-muted-foreground">{channel.time}</p>
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground">{channel.currentShow}</p>
-          </Card>
-        ))}
+    <Card className="h-[calc(100vh-8rem)]">
+      <div className="p-4 border-b">
+        <h2 className="font-semibold">Today's Schedule</h2>
+        <p className="text-sm text-muted-foreground">{channel}</p>
       </div>
-
-      <div className="lg:col-span-3">
-        <div className="mb-4">
-          <h2 className="text-xl font-semibold">Schedule for {selectedChannel}</h2>
-          <p className="text-sm text-muted-foreground">{selectedDate}</p>
-        </div>
-        <div className="flex flex-col gap-3">
-          {schedule.map((item, index) => (
+      <ScrollArea className="h-[calc(100%-5rem)]">
+        <div className="p-4 space-y-2">
+          {programs.map((program, index) => (
             <Link
               key={index}
-              href={`/watch?channel=${encodeURIComponent(selectedChannel)}&date=${selectedDate}&time=${item.time}&title=${encodeURIComponent(item.title)}`}
-              className="block"
+              href={`/watch?channel=${encodeURIComponent(channel)}&date=${date}&time=${program.time}&title=${encodeURIComponent(program.title)}`}
+              className={cn(
+                "block p-3 rounded-lg hover:bg-secondary/50 transition-colors",
+                program.time === currentTime && "bg-secondary ring-2 ring-primary",
+              )}
             >
-              <Card className="p-4 hover:bg-secondary/50 transition-colors cursor-pointer">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <span className="text-2xl font-bold text-muted-foreground">{item.time}</span>
-                    <div>
-                      <h3 className="font-semibold">{item.title}</h3>
-                    </div>
-                  </div>
-                  <div>
-                    {item.status === "live" && <Badge variant="destructive">Live Now</Badge>}
-                    {item.status === "replay" && (
-                      <Button variant="outline" size="sm">
-                        Replay
-                      </Button>
-                    )}
-                    {item.status === "upcoming" && <Badge variant="secondary">Upcoming</Badge>}
-                  </div>
-                </div>
-              </Card>
+              <div className="flex items-start justify-between gap-2 mb-1">
+                <span className="text-sm font-semibold">{program.time}</span>
+                {program.status === "live" && (
+                  <Badge variant="destructive" className="text-xs">
+                    Live
+                  </Badge>
+                )}
+                {program.status === "replay" && (
+                  <Badge variant="outline" className="text-xs">
+                    Replay
+                  </Badge>
+                )}
+              </div>
+              <p className="text-sm line-clamp-2">{program.title}</p>
             </Link>
           ))}
         </div>
-      </div>
-    </div>
+      </ScrollArea>
+    </Card>
   )
 }

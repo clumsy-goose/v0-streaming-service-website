@@ -3,40 +3,105 @@
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { useState, useMemo } from "react"
 
-const dates = [
-  { date: "Oct 19", day: "Saturday", status: "past" },
-  { date: "Oct 20", day: "Sunday", status: "active" },
-  { date: "Oct 21", day: "Monday", status: "upcoming" },
-  { date: "Oct 22", day: "Tuesday", status: "upcoming" },
-  { date: "Oct 23", day: "Wednesday", status: "upcoming" },
-  { date: "Oct 24", day: "Thursday", status: "upcoming" },
-  { date: "Oct 25", day: "Friday", status: "upcoming" },
-]
+function generateDateRange() {
+  const dates = []
+  const today = new Date()
 
-export function DateCarousel() {
+  // Start from 2 days before today
+  for (let i = -2; i <= 4; i++) {
+    const date = new Date(today)
+    date.setDate(today.getDate() + i)
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+
+    const dateStr = `${monthNames[date.getMonth()]} ${date.getDate()}`
+    const dayStr = dayNames[date.getDay()]
+
+    let status = "upcoming"
+    if (i < 0) status = "past"
+    else if (i === 0) status = "active"
+
+    dates.push({
+      date: dateStr,
+      day: dayStr,
+      status,
+      fullDate: date.toISOString().split("T")[0], // YYYY-MM-DD format for comparison
+    })
+  }
+
+  return dates
+}
+
+interface DateCarouselProps {
+  onDateSelect?: (date: string) => void
+  onViewSchedule?: () => void
+  selectedDate?: string
+}
+
+export function DateCarousel({ onDateSelect, onViewSchedule, selectedDate }: DateCarouselProps) {
+  const dates = useMemo(() => generateDateRange(), [])
+
+  const [selectedIndex, setSelectedIndex] = useState(selectedDate ? dates.findIndex((d) => d.date === selectedDate) : 2)
+
+  const handlePrev = () => {
+    setSelectedIndex((prev) => Math.max(0, prev - 1))
+  }
+
+  const handleNext = () => {
+    setSelectedIndex((prev) => Math.min(dates.length - 1, prev + 1))
+  }
+
+  const handleDateClick = (index: number) => {
+    setSelectedIndex(index)
+    if (onDateSelect) {
+      onDateSelect(dates[index].date)
+    }
+  }
+
   return (
     <div className="border-y border-border bg-card">
       <div className="container mx-auto px-4">
         <div className="flex items-center gap-2 py-4">
-          <Button variant="ghost" size="icon" className="shrink-0">
+          <Button variant="ghost" size="icon" className="shrink-0" onClick={handlePrev} disabled={selectedIndex === 0}>
             <ChevronLeft className="h-5 w-5" />
           </Button>
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide flex-1">
             {dates.map((item, index) => (
               <button
                 key={index}
+                onClick={() => handleDateClick(index)}
                 className={cn(
                   "flex flex-col items-center gap-1 px-6 py-3 rounded-lg transition-colors shrink-0",
-                  item.status === "active" ? "bg-primary text-primary-foreground" : "hover:bg-secondary",
+                  index === selectedIndex ? "bg-primary text-primary-foreground" : "hover:bg-secondary",
                 )}
               >
                 <span className="text-sm font-medium">{item.date}</span>
-                <span className="text-xs text-muted-foreground">{item.day}</span>
+                <span
+                  className={cn(
+                    "text-xs",
+                    index === selectedIndex ? "text-primary-foreground/80" : "text-muted-foreground",
+                  )}
+                >
+                  {item.day}
+                </span>
               </button>
             ))}
           </div>
-          <Button variant="ghost" size="icon" className="shrink-0">
+          {onViewSchedule && (
+            <Button variant="outline" onClick={onViewSchedule} className="shrink-0 bg-transparent">
+              View Schedule
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="shrink-0"
+            onClick={handleNext}
+            disabled={selectedIndex === dates.length - 1}
+          >
             <ChevronRight className="h-5 w-5" />
           </Button>
         </div>
