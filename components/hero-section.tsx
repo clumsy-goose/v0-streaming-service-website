@@ -5,17 +5,7 @@ import { Button } from "@/components/ui/button"
 
 export function HeroSection() {
   return (
-    <section className="relative h-[500px] w-full overflow-hidden">
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{
-          backgroundImage:
-            "url(https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Clipboard_Screenshot_1759917856-Yf1NxKylpDoEYvRQckcWI7oOkg7pXC.png)",
-          backgroundPosition: "center 20%",
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-      </div>
+    <section className="relative h-[250px] w-full overflow-hidden bg-secondary">
       <div className="relative container mx-auto px-4 h-full flex items-center">
         <div className="max-w-2xl">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 text-balance">Breaking News: Special Coverage</h1>
