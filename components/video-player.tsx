@@ -1,7 +1,5 @@
 "use client"
 
-import type React from "react"
-
 import { useEffect, useRef, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -17,8 +15,6 @@ export function VideoPlayer({ channel, programTime }: VideoPlayerProps) {
   const hlsRef = useRef<any>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [duration, setDuration] = useState(0)
 
   useEffect(() => {
     const video = videoRef.current
@@ -78,22 +74,6 @@ export function VideoPlayer({ channel, programTime }: VideoPlayerProps) {
     return cleanup
   }, [channel, programTime])
 
-  useEffect(() => {
-    const video = videoRef.current
-    if (!video) return
-
-    const handleTimeUpdate = () => setCurrentTime(video.currentTime)
-    const handleLoadedMetadata = () => setDuration(video.duration)
-
-    video.addEventListener("timeupdate", handleTimeUpdate)
-    video.addEventListener("loadedmetadata", handleLoadedMetadata)
-
-    return () => {
-      video.removeEventListener("timeupdate", handleTimeUpdate)
-      video.removeEventListener("loadedmetadata", handleLoadedMetadata)
-    }
-  }, [])
-
   const togglePlay = () => {
     const video = videoRef.current
     if (!video) return
@@ -125,23 +105,6 @@ export function VideoPlayer({ channel, programTime }: VideoPlayerProps) {
     }
   }
 
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const video = videoRef.current
-    if (!video) return
-
-    const time = Number.parseFloat(e.target.value)
-    video.currentTime = time
-    setCurrentTime(time)
-  }
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = Math.floor(seconds % 60)
-    return `${mins}:${secs.toString().padStart(2, "0")}`
-  }
-
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0
-
   return (
     <Card className="overflow-hidden">
       <div className="relative aspect-video bg-black">
@@ -149,18 +112,14 @@ export function VideoPlayer({ channel, programTime }: VideoPlayerProps) {
 
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 space-y-2">
-          <input
-            type="range"
-            min="0"
-            max={duration || 0}
-            value={currentTime}
-            onChange={handleSeek}
-            className="w-full h-1 bg-white/20 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-destructive"
-            style={{
-              background: `linear-gradient(to right, hsl(var(--destructive)) ${progress}%, rgba(255,255,255,0.2) ${progress}%)`,
-            }}
-          />
+        <div className="absolute top-4 left-4 pointer-events-none">
+          <div className="flex items-center gap-2 bg-destructive/90 backdrop-blur-sm px-3 py-1.5 rounded-full">
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+            <span className="text-sm font-semibold text-white">LIVE</span>
+          </div>
+        </div>
+
+        <div className="absolute bottom-0 left-0 right-0 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Button size="icon" variant="ghost" className="h-9 w-9 text-white hover:bg-white/20" onClick={togglePlay}>
@@ -169,9 +128,6 @@ export function VideoPlayer({ channel, programTime }: VideoPlayerProps) {
               <Button size="icon" variant="ghost" className="h-9 w-9 text-white hover:bg-white/20" onClick={toggleMute}>
                 {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
               </Button>
-              <span className="text-sm text-white">
-                {formatTime(currentTime)} / {formatTime(duration)}
-              </span>
             </div>
             <div className="flex items-center gap-2">
               <Button size="icon" variant="ghost" className="h-9 w-9 text-white hover:bg-white/20">
