@@ -8,8 +8,7 @@ import { Suspense } from "react"
 
 function getTodayDateString() {
   const today = new Date()
-  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-  return `${monthNames[today.getMonth()]} ${today.getDate()}`
+  return today.toISOString().split("T")[0] // Returns YYYY-MM-DD
 }
 
 function ScheduleContent() {

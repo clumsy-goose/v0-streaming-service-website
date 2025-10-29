@@ -57,7 +57,7 @@ export function DateCarousel({ onDateSelect, onViewSchedule, selectedDate }: Dat
   const handleDateClick = (index: number) => {
     setSelectedIndex(index)
     if (onDateSelect) {
-      onDateSelect(dates[index].date)
+      onDateSelect(dates[index].fullDate)
     }
   }
 

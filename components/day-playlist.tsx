@@ -13,7 +13,7 @@ interface DayPlaylistProps {
 }
 
 function generateScheduleForDate(channel: string, date: string) {
-  const dateObj = new Date(date)
+  const dateObj = new Date(date + "T00:00:00") // Add time to ensure proper parsing
   const dayOfWeek = dateObj.getDay()
   const dateNum = dateObj.getDate()
 
@@ -74,12 +74,31 @@ function generateScheduleForDate(channel: string, date: string) {
   }
 
   const templates = programTemplates[channel] || programTemplates["News 1"]
+
   const currentTime = new Date()
-  const currentHour = currentTime.getHours()
-  const currentMinute = currentTime.getMinutes()
+  const currentDateStr = currentTime.toISOString().split("T")[0]
+  const isToday = date === currentDateStr
+  const isPast = date < currentDateStr
+  const isFuture = date > currentDateStr
 
   return templates.map((template, index) => {
     const [hour, minute] = template.timeBase.split(":").map(Number)
+
+    // Get the next program's start time to determine when this program ends
+    const nextTemplate = templates[index + 1]
+    let programEndHour: number
+    let programEndMinute: number
+
+    if (nextTemplate) {
+      const [nextHour, nextMinute] = nextTemplate.timeBase.split(":").map(Number)
+      programEndHour = nextHour
+      programEndMinute = nextMinute
+    } else {
+      // Last program of the day, assume it ends at 23:59
+      programEndHour = 23
+      programEndMinute = 59
+    }
+
     const episodeNum = ((dateNum * 10 + index + dayOfWeek) % 500) + 1
     const variation = dayOfWeek % 3
 
@@ -92,17 +111,43 @@ function generateScheduleForDate(channel: string, date: string) {
       title = `${template.titleTemplate} - ${dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
     }
 
-    const isToday = dateObj.toDateString() === new Date().toDateString()
-    let status = "upcoming"
+    // Create a Date object for this program's start time
+    const programStartTime = new Date(dateObj)
+    programStartTime.setHours(hour, minute, 0, 0)
 
-    if (isToday) {
-      if (hour < currentHour || (hour === currentHour && minute < currentMinute)) {
-        status = "replay"
-      } else if (hour === currentHour || (hour === currentHour + 1 && minute < currentMinute)) {
+    // Get the next program's start time to determine when this program ends
+    const programEndTime = new Date(programStartTime)
+    if (nextTemplate) {
+      const [nextHour, nextMinute] = nextTemplate.timeBase.split(":").map(Number)
+      programEndTime.setHours(nextHour, nextMinute, 0, 0)
+    } else {
+      // Last program of the day, assume it ends at midnight
+      programEndTime.setHours(23, 59, 59, 999)
+    }
+
+    let status = "not-started"
+
+    if (isPast) {
+      // All programs on past dates are ended
+      status = "ended"
+    } else if (isFuture) {
+      // All programs on future dates haven't started
+      status = "not-started"
+    } else if (isToday) {
+      // For today, check the current time
+      const currentHour = currentTime.getHours()
+      const currentMinute = currentTime.getMinutes()
+      const currentTotalMinutes = currentHour * 60 + currentMinute
+      const programStartMinutes = hour * 60 + minute
+      const programEndMinutes = programEndHour * 60 + programEndMinute
+
+      if (currentTotalMinutes >= programEndMinutes) {
+        status = "ended"
+      } else if (currentTotalMinutes >= programStartMinutes && currentTotalMinutes < programEndMinutes) {
         status = "live"
+      } else {
+        status = "not-started"
       }
-    } else if (dateObj < new Date()) {
-      status = "replay"
     }
 
     return {
@@ -124,15 +169,11 @@ export function DayPlaylist({ channel, date, currentTime }: DayPlaylistProps) {
       </div>
       <ScrollArea className="h-[calc(100%-5rem)]">
         <div className="p-4 space-y-2">
-          {programs.map((program, index) => (
-            <Link
-              key={index}
-              href={`/watch?channel=${encodeURIComponent(channel)}&date=${date}&time=${program.time}&title=${encodeURIComponent(program.title)}`}
-              className={cn(
-                "block p-3 rounded-lg hover:bg-secondary/50 transition-colors",
-                program.time === currentTime && "bg-secondary ring-2 ring-primary",
-              )}
-            >
+          {programs.map((program, index) => {
+            const isClickable = program.status === "live"
+            const isCurrentProgram = program.time === currentTime
+
+            const content = (
               <div className="flex items-start justify-between gap-2 mb-1">
                 <span className="text-sm font-semibold">{program.time}</span>
                 {program.status === "live" && (
@@ -140,15 +181,48 @@ export function DayPlaylist({ channel, date, currentTime }: DayPlaylistProps) {
                     Live
                   </Badge>
                 )}
-                {program.status === "replay" && (
-                  <Badge variant="outline" className="text-xs">
-                    Replay
+                {program.status === "ended" && (
+                  <Badge variant="secondary" className="text-xs bg-muted text-muted-foreground">
+                    Ended
+                  </Badge>
+                )}
+                {program.status === "not-started" && (
+                  <Badge variant="secondary" className="text-xs bg-muted text-muted-foreground">
+                    Not Started
                   </Badge>
                 )}
               </div>
-              <p className="text-sm line-clamp-2">{program.title}</p>
-            </Link>
-          ))}
+            )
+
+            if (isClickable) {
+              return (
+                <Link
+                  key={index}
+                  href={`/watch?channel=${encodeURIComponent(channel)}&date=${date}&time=${program.time}&title=${encodeURIComponent(program.title)}`}
+                  className={cn(
+                    "block p-3 rounded-lg hover:bg-secondary/50 transition-colors cursor-pointer",
+                    isCurrentProgram && "bg-secondary ring-2 ring-primary",
+                  )}
+                >
+                  {content}
+                  <p className="text-sm line-clamp-2">{program.title}</p>
+                </Link>
+              )
+            }
+
+            return (
+              <div
+                key={index}
+                className={cn(
+                  "block p-3 rounded-lg opacity-50 cursor-not-allowed",
+                  isCurrentProgram && "bg-secondary/30",
+                )}
+              >
+                {content}
+                <p className="text-sm line-clamp-2 text-muted-foreground">{program.title}</p>
+              </div>
+            )
+          })}
         </div>
       </ScrollArea>
     </Card>
