@@ -1,10 +1,13 @@
 "use client"
 
+import type React from "react"
+
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
-import { Maximize, Settings, Volume2, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, Play } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
+import { useRouter } from "next/navigation"
 
 const channelContent: Record<string, { title: string; description: string; image: string; program: string }> = {
   "News 1": {
@@ -59,6 +62,11 @@ interface LiveStreamsProps {
 }
 
 export function LiveStreams({ selectedChannel, onChannelChange }: LiveStreamsProps) {
+  const [isPlaying, setIsPlaying] = useState(false)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const hlsRef = useRef<any>(null)
+  const router = useRouter()
+
   const content = channelContent[selectedChannel] || channelContent["News 1"]
 
   const currentIndex = channels.indexOf(selectedChannel)
@@ -67,15 +75,75 @@ export function LiveStreams({ selectedChannel, onChannelChange }: LiveStreamsPro
 
   const handlePrev = () => {
     if (canGoPrev && onChannelChange) {
+      setIsPlaying(false)
       onChannelChange(channels[currentIndex - 1])
     }
   }
 
   const handleNext = () => {
     if (canGoNext && onChannelChange) {
+      setIsPlaying(false)
       onChannelChange(channels[currentIndex + 1])
     }
   }
+
+  const handlePlayClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setIsPlaying(true)
+  }
+
+  const handleCardClick = () => {
+    const now = new Date()
+    const dateStr = now.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+    const hours = now.getHours().toString().padStart(2, "0")
+    const minutes = now.getMinutes().toString().padStart(2, "0")
+    const timeStr = `${hours}:${minutes}`
+
+    router.push(
+      `/watch?channel=${encodeURIComponent(selectedChannel)}&date=${encodeURIComponent(
+        now.toISOString().split("T")[0],
+      )}&time=${encodeURIComponent(timeStr)}&title=${encodeURIComponent(content.program)}`,
+    )
+  }
+
+  useEffect(() => {
+    if (isPlaying && videoRef.current) {
+      const video = videoRef.current
+      const hlsUrl = "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
+
+      if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        video.src = hlsUrl
+        video.play().catch((error) => {
+          console.error("[v0] Error playing video:", error)
+        })
+      } else {
+        import("hls.js").then(({ default: Hls }) => {
+          if (Hls.isSupported()) {
+            const hls = new Hls()
+            hlsRef.current = hls
+            hls.loadSource(hlsUrl)
+            hls.attachMedia(video)
+            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+              video.play().catch((error) => {
+                console.error("[v0] Error playing video:", error)
+              })
+            })
+          }
+        })
+      }
+    }
+
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy()
+        hlsRef.current = null
+      }
+    }
+  }, [isPlaying, selectedChannel])
+
+  useEffect(() => {
+    setIsPlaying(false)
+  }, [selectedChannel])
 
   return (
     <div className="space-y-4">
@@ -107,54 +175,51 @@ export function LiveStreams({ selectedChannel, onChannelChange }: LiveStreamsPro
         </Badge>
       </div>
 
-      <Card className="overflow-hidden bg-card border-border">
+      <Card
+        className="overflow-hidden bg-card border-border cursor-pointer hover:border-primary/50 transition-colors"
+        onClick={handleCardClick}
+      >
         <div className="grid md:grid-cols-2 gap-0">
-          {/* Left side: Channel preview */}
           <div className="relative aspect-video md:aspect-auto bg-secondary">
-            <img src={content.image || "/placeholder.svg"} alt="Live stream" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-            <div className="absolute top-3 left-3">
-              <Badge variant="destructive" className="gap-1 text-xs">
-                <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
-                LIVE
-              </Badge>
-            </div>
-            <div className="absolute bottom-0 left-0 right-0 p-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1">
-                  <Button size="icon" variant="ghost" className="h-7 w-7 text-white hover:bg-white/20">
-                    <Play className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-7 w-7 text-white hover:bg-white/20">
-                    <Volume2 className="h-3.5 w-3.5" />
+            {isPlaying ? (
+              <video ref={videoRef} className="w-full h-full object-cover" controls playsInline />
+            ) : (
+              <>
+                <img
+                  src={content.image || "/placeholder.svg"}
+                  alt="Live stream preview"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                <div className="absolute top-3 left-3">
+                  <Badge variant="destructive" className="gap-1 text-xs">
+                    <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+                    LIVE
+                  </Badge>
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Button
+                    size="icon"
+                    onClick={handlePlayClick}
+                    className="h-16 w-16 rounded-full bg-primary/90 hover:bg-primary text-primary-foreground shadow-lg"
+                  >
+                    <Play className="h-8 w-8 ml-1" fill="currentColor" />
                   </Button>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Button size="icon" variant="ghost" className="h-7 w-7 text-white hover:bg-white/20">
-                    <Settings className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-7 w-7 text-white hover:bg-white/20">
-                    <Maximize className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              </div>
-            </div>
+              </>
+            )}
           </div>
 
-          {/* Right side: Channel introduction */}
           <div className="p-6 flex flex-col justify-center space-y-4">
-            {/* Channel name */}
             <div>
               <h3 className="text-2xl font-bold">{content.title}</h3>
             </div>
 
-            {/* Currently airing program */}
             <div>
               <p className="text-sm text-muted-foreground mb-1">Now Playing</p>
               <p className="text-lg font-semibold">{content.program}</p>
             </div>
 
-            {/* Program introduction */}
             <div>
               <p className="text-sm text-muted-foreground leading-relaxed">{content.description}</p>
             </div>
