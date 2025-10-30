@@ -7,8 +7,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
+  title: 'Stream TV - Watch Live TV',
+  description: 'Stream TV 是一项免费的在线流媒体服务，可让您在电脑、平板电脑或智能手机上观看直播电视频道。',
   generator: 'v0.app',
 }
 
