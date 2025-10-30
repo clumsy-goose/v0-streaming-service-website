@@ -30,7 +30,7 @@ export function VideoPlayer({ channel, programTime }: VideoPlayerProps) {
 
     cleanup()
 
-    const hlsUrl = `https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8`
+    const hlsUrl = `http://1376254607.ap-singapore.streampackage.srclivepull.myqcloud.com/channel_assembly/68FE543512970EAA37BD/snooker.m3u8`
 
     if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = hlsUrl

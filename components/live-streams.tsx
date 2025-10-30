@@ -109,7 +109,7 @@ export function LiveStreams({ selectedChannel, onChannelChange }: LiveStreamsPro
   useEffect(() => {
     if (isPlaying && videoRef.current) {
       const video = videoRef.current
-      const hlsUrl = "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
+      const hlsUrl = "http://1376254607.ap-singapore.streampackage.srclivepull.myqcloud.com/channel_assembly/68FE543512970EAA37BD/snooker.m3u8"
 
       if (video.canPlayType("application/vnd.apple.mpegurl")) {
         video.src = hlsUrl
@@ -180,15 +180,15 @@ export function LiveStreams({ selectedChannel, onChannelChange }: LiveStreamsPro
         onClick={handleCardClick}
       >
         <div className="grid md:grid-cols-2 gap-0">
-          <div className="relative aspect-video md:aspect-auto bg-secondary">
+          <div className="relative aspect-square bg-secondary">
             {isPlaying ? (
-              <video ref={videoRef} className="w-full h-full object-cover" controls playsInline />
+              <video ref={videoRef} className="block w-full h-full object-cover" controls playsInline />
             ) : (
               <>
                 <img
                   src={content.image || "/placeholder.svg"}
                   alt="Live stream preview"
-                  className="w-full h-full object-cover"
+                  className="block w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 <div className="absolute top-3 left-3">
