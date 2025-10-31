@@ -48,6 +48,56 @@ export default function HomePage() {
             onChannelClick={handleChannelClick}
           />
         </div>
+        {/* Test section */}
+        <div className="mt-8 p-4 border rounded">
+          <h3 className="text-lg font-semibold mb-2">测试：获取全部频道</h3>
+          <button
+            className="px-4 py-2 rounded bg-primary text-primary-foreground hover:opacity-90"
+            onClick={async () => {
+              try {
+                const res = await fetch('/api/test/channels', { method: 'GET' })
+                const json = await res.json()
+                if (!json.ok) {
+                  alert(`请求失败: ${json.error || 'unknown error'}`)
+                  return
+                }
+                const total = json?.data?.Response?.TotalNum ?? json?.data?.Response?.TotalCount ?? (json?.data?.Channels?.length ?? 0)
+                alert(`请求成功，返回频道数：${total}`)
+                // Console for dev inspection
+                console.log('DescribeStreamPackageLinearAssemblyChannels result:', json.data)
+              } catch (e: any) {
+                alert(`异常: ${e?.message || e}`)
+              }
+            }}
+          >
+            获取全部频道（测试）
+          </button>
+          <div className="h-4" />
+          <h3 className="text-lg font-semibold mb-2">测试：获取频道节目单</h3>
+          <button
+            className="px-4 py-2 rounded bg-primary text-primary-foreground hover:opacity-90"
+            onClick={async () => {
+              try {
+                const channelId = window.prompt('请输入 ChannelId：') || ''
+                if (!channelId) return
+                const params = new URLSearchParams({ channelId, timeWindow: String(7243600), pageNum: '1', pageSize: '10' })
+                const res = await fetch(`/api/test/program-schedules?${params.toString()}`, { method: 'GET' })
+                const json = await res.json()
+                if (!json.ok) {
+                  alert(`请求失败: ${json.error || 'unknown error'}`)
+                  return
+                }
+                const total = json?.data?.Response?.TotalNum ?? json?.data?.Response?.TotalCount ?? (json?.data?.ProgramSchedules?.length ?? 0)
+                alert(`请求成功，节目单条目数：${total}`)
+                console.log('DescribeStreamPackageLinearAssemblyProgramSchedules result:', json.data)
+              } catch (e: any) {
+                alert(`异常: ${e?.message || e}`)
+              }
+            }}
+          >
+            获取频道节目单（测试）
+          </button>
+        </div>
       </div>
     </div>
   )
