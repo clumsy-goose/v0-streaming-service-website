@@ -9,8 +9,8 @@ function generateDateRange() {
   const dates = []
   const today = new Date()
 
-  // Start from 2 days before today
-  for (let i = -2; i <= 4; i++) {
+  // Start from today and show next 6 days (total 7 days)
+  for (let i = 0; i <= 6; i++) {
     const date = new Date(today)
     date.setDate(today.getDate() + i)
 
@@ -21,8 +21,7 @@ function generateDateRange() {
     const dayStr = dayNames[date.getDay()]
 
     let status = "upcoming"
-    if (i < 0) status = "past"
-    else if (i === 0) status = "active"
+    if (i === 0) status = "active"
 
     dates.push({
       date: dateStr,
@@ -44,7 +43,7 @@ interface DateCarouselProps {
 export function DateCarousel({ onDateSelect, onViewSchedule, selectedDate }: DateCarouselProps) {
   const dates = useMemo(() => generateDateRange(), [])
 
-  const [selectedIndex, setSelectedIndex] = useState(selectedDate ? dates.findIndex((d) => d.date === selectedDate) : 2)
+  const [selectedIndex, setSelectedIndex] = useState(selectedDate ? dates.findIndex((d) => d.fullDate === selectedDate) : 0)
 
   const handlePrev = () => {
     setSelectedIndex((prev) => Math.max(0, prev - 1))
