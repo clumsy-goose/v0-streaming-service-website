@@ -7,10 +7,10 @@ export function HeroSection() {
   return (
     <section className="relative h-[250px] w-full overflow-hidden bg-secondary">
       <div className="relative container mx-auto px-4 h-full flex items-center">
-        <div className="max-w-2xl">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-balance">Breaking News: Special Coverage</h1>
+        <div className="max-w-5xl">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-balance">Stream TV: Watch Free Live TV</h1>
           <p className="text-lg text-muted-foreground mb-6 text-pretty">
-            Watch live coverage of today's most important stories from around the world
+          Stream TV 是一项免费的在线流媒体服务,以带广告的直播流媒体形式提供频道内容，用户可以免费观看这些频道的内容
           </p>
           <div className="flex gap-4">
             <Button size="lg" className="gap-2">

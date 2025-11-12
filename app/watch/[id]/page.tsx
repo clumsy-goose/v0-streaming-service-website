@@ -12,9 +12,9 @@ export default function WatchPage() {
           <div className="lg:col-span-2 space-y-6">
             <VideoPlayer />
             <div>
-              <h1 className="text-2xl font-bold mb-2">Breaking News: Special Coverage</h1>
+              <h1 className="text-2xl font-bold mb-2">Stream TV: Watch Free Live TV</h1>
               <p className="text-muted-foreground">
-                Live coverage of today's most important stories from around the world
+                Stream TV 是一项免费的在线流媒体服务,以带广告的直播流媒体形式提供频道内容，用户可以免费观看这些频道的内容
               </p>
             </div>
             <CommentSection />
