@@ -16,7 +16,7 @@ function ScheduleContent() {
   const router = useRouter()
 
   const selectedDate = searchParams.get("date") || getTodayDateString()
-  const selectedChannel = searchParams.get("channel") || "News 1"
+  const selectedChannel = searchParams.get("channel") || ""
 
   const handleDateSelect = (date: string) => {
     const params = new URLSearchParams(searchParams.toString())
