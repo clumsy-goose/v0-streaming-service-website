@@ -36,7 +36,7 @@ export const channelsMap: Record<string, ChannelBasicInfo> = {
 		channelName: "NBA 直播频道",
 		channelDescription:
 			"NBA，也称美国职业篮球联赛，是全世界水平最高的篮球联赛，本频道提供2023-2024赛季NBA总决赛回放。凯尔特人击败独行侠，总比分4-1加冕2023-2024赛季NBA总冠军，队史第18次捧起总冠军奖杯！",
-		image: "/nba.jpg",
+		image: "/nba.webp",
 	},
 	snooker: {
 		channelName: "斯诺克直播频道",
@@ -48,13 +48,13 @@ export const channelsMap: Record<string, ChannelBasicInfo> = {
 		channelName: "脱口秀直播频道",
 		channelDescription:
 			"脱口秀，是一种以幽默、调侃为主要表现形式的语言艺术形式。本频道提供《脱口秀和他的朋友们第二季》的节目回放。",
-		image: "/talk_show.jpg",
+		image: "/talkshow.webp",
 	},
 	drama: {
 		channelName: "电视剧直播频道",
 		channelDescription:
 			"本频道是电视剧频道，提供电视剧的节目回放，本频道提供《请回答1988》的节目回放。《请回答1988》以1988年汉城（今首尔）奥运会为故事背景，讲述住在首尔市道峰区双门洞的五个家庭的故事",
-		image: "/drama.jpg",
+		image: "/drama.jpeg",
 	},
 	movie: {
 		channelName: "电影直播频道",
@@ -66,7 +66,7 @@ export const channelsMap: Record<string, ChannelBasicInfo> = {
 		channelName: "广告演示频道",
 		channelDescription:
 			"本频道是广告频道，用于演示Streampackage的广告插入功能，在腾讯云音视频产品 Stream Service 上，可以实现基于 SCTE-35 和 SSAI 的动态广告插入。",
-		image: "/advertising.jpg",
+		image: "/advertise.webp",
 	},
 }
 
