@@ -8,82 +8,35 @@ import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, Play } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-
-const channelContent: Record<string, { title: string; description: string; image: string; program: string }> = {
-  "News 1": {
-    title: "News 1",
-    program: "Morning Headlines - Live Coverage",
-    description:
-      "Breaking news and current events from around the world. Stay informed with our comprehensive coverage of the latest developments in politics, economy, and society.",
-    image: "/live-news-broadcast-studio.jpg",
-  },
-  "News 2": {
-    title: "News 2",
-    program: "World Report - International News",
-    description:
-      "Global perspectives on today's most important stories. Our correspondents bring you in-depth analysis and reporting from every corner of the world.",
-    image: "/world-news-studio.jpg",
-  },
-  Finance: {
-    title: "Finance",
-    program: "Market Watch - Financial News",
-    description:
-      "Real-time market analysis and business updates. Track the latest trends in stocks, commodities, and global financial markets with expert commentary.",
-    image: "/financial-news-studio.jpg",
-  },
-  Sports: {
-    title: "Sports",
-    program: "Game Highlights - Sports Coverage",
-    description:
-      "Live sports action and expert commentary. From football to basketball, tennis to motorsports, catch all the excitement and analysis you need.",
-    image: "/sports-broadcast-studio.jpg",
-  },
-  Entertainment: {
-    title: "Entertainment",
-    program: "Celebrity Talk - Entertainment News",
-    description:
-      "The latest in movies, music, and pop culture. Exclusive interviews, red carpet coverage, and behind-the-scenes access to your favorite stars.",
-    image: "/entertainment-talk-show.jpg",
-  },
-  Movies: {
-    title: "Movies",
-    program: "Classic Cinema - Movie Channel",
-    description:
-      "Timeless films and cinematic masterpieces. Experience the golden age of cinema with carefully curated classics and award-winning productions.",
-    image: "/movie-theater-screen.jpg",
-  },
-}
-
-const channels = ["News 1", "News 2", "Finance", "Sports", "Entertainment", "Movies"]
+import type { Channel } from "@/config"
 
 interface LiveStreamsProps {
-  selectedChannel: string
-  onChannelChange?: (channel: string) => void
+  channel: Channel
+  channels: Channel[]
+  onChannelChange?: (channelId: string) => void
 }
 
-export function LiveStreams({ selectedChannel, onChannelChange }: LiveStreamsProps) {
+export function LiveStreams({ channel, channels, onChannelChange }: LiveStreamsProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const hlsRef = useRef<any>(null)
   const router = useRouter()
 
-  const content = channelContent[selectedChannel] || channelContent["News 1"]
-
-  const currentIndex = channels.indexOf(selectedChannel)
+  const currentIndex = channels.findIndex(c => c.channelId === channel.channelId)
   const canGoPrev = currentIndex > 0
   const canGoNext = currentIndex < channels.length - 1
 
   const handlePrev = () => {
     if (canGoPrev && onChannelChange) {
       setIsPlaying(false)
-      onChannelChange(channels[currentIndex - 1])
+      onChannelChange(channels[currentIndex - 1].channelId)
     }
   }
 
   const handleNext = () => {
     if (canGoNext && onChannelChange) {
       setIsPlaying(false)
-      onChannelChange(channels[currentIndex + 1])
+      onChannelChange(channels[currentIndex + 1].channelId)
     }
   }
 
@@ -98,18 +51,19 @@ export function LiveStreams({ selectedChannel, onChannelChange }: LiveStreamsPro
     const hours = now.getHours().toString().padStart(2, "0")
     const minutes = now.getMinutes().toString().padStart(2, "0")
     const timeStr = `${hours}:${minutes}`
+    const programName = channel.playingProgram?.programName || ""
 
     router.push(
-      `/watch?channel=${encodeURIComponent(selectedChannel)}&date=${encodeURIComponent(
+      `/watch?channel=${encodeURIComponent(channel.channelId)}&date=${encodeURIComponent(
         now.toISOString().split("T")[0],
-      )}&time=${encodeURIComponent(timeStr)}&title=${encodeURIComponent(content.program)}`,
+      )}&time=${encodeURIComponent(timeStr)}&title=${encodeURIComponent(programName)}`,
     )
   }
 
   useEffect(() => {
-    if (isPlaying && videoRef.current) {
+    if (isPlaying && videoRef.current && channel.playbackURL) {
       const video = videoRef.current
-      const hlsUrl = "http://1376254607.ap-singapore.streampackage.srclivepull.myqcloud.com/channel_assembly/68FE543512970EAA37BD/snooker.m3u8"
+      const hlsUrl = channel.playbackURL
 
       if (video.canPlayType("application/vnd.apple.mpegurl")) {
         video.src = hlsUrl
@@ -139,11 +93,11 @@ export function LiveStreams({ selectedChannel, onChannelChange }: LiveStreamsPro
         hlsRef.current = null
       }
     }
-  }, [isPlaying, selectedChannel])
+  }, [isPlaying, channel.playbackURL, channel.channelId])
 
   useEffect(() => {
     setIsPlaying(false)
-  }, [selectedChannel])
+  }, [channel.channelId])
 
   return (
     <div className="space-y-4">
@@ -158,7 +112,7 @@ export function LiveStreams({ selectedChannel, onChannelChange }: LiveStreamsPro
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <h2 className="text-xl font-bold">{content.title}</h2>
+          <h2 className="text-xl font-bold">{channel.channelName}</h2>
           <Button
             size="icon"
             variant="outline"
@@ -169,10 +123,12 @@ export function LiveStreams({ selectedChannel, onChannelChange }: LiveStreamsPro
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-        <Badge variant="destructive" className="gap-1">
-          <span className="h-2 w-2 rounded-full bg-white animate-pulse" />
-          LIVE
-        </Badge>
+        {channel.playingProgram?.status === "live" && (
+          <Badge variant="destructive" className="gap-1">
+            <span className="h-2 w-2 rounded-full bg-white animate-pulse" />
+            LIVE
+          </Badge>
+        )}
       </div>
 
       <Card
@@ -186,17 +142,19 @@ export function LiveStreams({ selectedChannel, onChannelChange }: LiveStreamsPro
             ) : (
               <>
                 <img
-                  src={content.image || "/placeholder.svg"}
+                  src={channel.image || "/placeholder.svg"}
                   alt="Live stream preview"
                   className="block w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <div className="absolute top-3 left-3">
-                  <Badge variant="destructive" className="gap-1 text-xs">
-                    <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
-                    LIVE
-                  </Badge>
-                </div>
+                {channel.playingProgram?.status === "live" && (
+                  <div className="absolute top-3 left-3">
+                    <Badge variant="destructive" className="gap-1 text-xs">
+                      <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+                      LIVE
+                    </Badge>
+                  </div>
+                )}
                 <div className="absolute inset-0 flex items-center justify-center">
                   <Button
                     size="icon"
@@ -212,16 +170,16 @@ export function LiveStreams({ selectedChannel, onChannelChange }: LiveStreamsPro
 
           <div className="p-6 flex flex-col justify-center space-y-4">
             <div>
-              <h3 className="text-2xl font-bold">{content.title}</h3>
+              <h3 className="text-2xl font-bold">{channel.channelName}</h3>
             </div>
 
             <div>
               <p className="text-sm text-muted-foreground mb-1">Now Playing</p>
-              <p className="text-lg font-semibold">{content.program}</p>
+              <p className="text-lg font-semibold">{channel.playingProgram?.programName || "暂无节目"}</p>
             </div>
 
             <div>
-              <p className="text-sm text-muted-foreground leading-relaxed">{content.description}</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">{channel.channelDescription}</p>
             </div>
           </div>
         </div>

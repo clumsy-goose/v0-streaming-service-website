@@ -6,53 +6,27 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
-
-const channels = [
-  {
-    name: "News 1",
-    time: "00:37-01:22",
-    program: "Morning Headlines",
-    status: "live",
-  },
-  {
-    name: "News 2",
-    time: "01:00-02:00",
-    program: "World Report",
-    status: "upcoming",
-  },
-  {
-    name: "Finance",
-    time: "01:00-02:00",
-    program: "Market Watch",
-    status: "upcoming",
-  },
-  {
-    name: "Sports",
-    time: "00:23-01:30",
-    program: "Game Highlights",
-    status: "upcoming",
-  },
-  {
-    name: "Entertainment",
-    time: "01:00-04:00",
-    program: "Celebrity Talk",
-    status: "upcoming",
-  },
-  {
-    name: "Movies",
-    time: "00:37-02:19",
-    program: "Classic Cinema",
-    status: "upcoming",
-  },
-]
+import type { Channel } from "@/config"
 
 interface ChannelCarouselProps {
-  selectedChannel: string
-  onChannelSelect: (channel: string) => void
-  onChannelClick?: (channel: string) => void
+  channels: Channel[]
+  selectedChannelId: string
+  onChannelSelect: (channelId: string) => void
+  onChannelClick?: (channelId: string) => void
 }
 
-export function ChannelCarousel({ selectedChannel, onChannelSelect, onChannelClick }: ChannelCarouselProps) {
+function formatTime(timestamp: number): string {
+  const date = new Date(timestamp * 1000)
+  const hours = date.getHours().toString().padStart(2, "0")
+  const minutes = date.getMinutes().toString().padStart(2, "0")
+  return `${hours}:${minutes}`
+}
+
+function formatTimeRange(startTime: number, endTime: number): string {
+  return `${formatTime(startTime)}-${formatTime(endTime)}`
+}
+
+export function ChannelCarousel({ channels, selectedChannelId, onChannelSelect, onChannelClick }: ChannelCarouselProps) {
   const [currentPage, setCurrentPage] = useState(0)
   const itemsPerPage = 6
 
@@ -68,10 +42,10 @@ export function ChannelCarousel({ selectedChannel, onChannelSelect, onChannelCli
     setCurrentPage((prev) => Math.min(totalPages - 1, prev + 1))
   }
 
-  const handleChannelClick = (channelName: string) => {
-    onChannelSelect(channelName)
+  const handleChannelClick = (channelId: string) => {
+    onChannelSelect(channelId)
     if (onChannelClick) {
-      onChannelClick(channelName)
+      onChannelClick(channelId)
     }
   }
 
@@ -89,34 +63,52 @@ export function ChannelCarousel({ selectedChannel, onChannelSelect, onChannelCli
         </div>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 transition-all duration-300">
-        {visibleChannels.map((channel, index) => (
-          <Card
-            key={startIndex + index}
-            onClick={() => handleChannelClick(channel.name)}
-            className={cn(
-              "p-4 hover:bg-secondary/50 transition-colors cursor-pointer",
-              selectedChannel === channel.name && "ring-2 ring-primary bg-secondary/30",
-            )}
-          >
-            <div className="flex items-start justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <div className="h-10 w-10 rounded bg-destructive flex items-center justify-center text-sm font-bold">
-                  {channel.name.charAt(0)}
-                </div>
-                <div>
-                  <h3 className="font-semibold text-sm">{channel.name}</h3>
-                  <p className="text-xs text-muted-foreground">{channel.time}</p>
-                </div>
-              </div>
-              {channel.status === "live" && (
-                <Badge variant="destructive" className="text-xs">
-                  LIVE
-                </Badge>
+        {visibleChannels.map((channel, index) => {
+          const playingProgram = channel.playingProgram
+          const timeRange = playingProgram ? formatTimeRange(playingProgram.startTime, playingProgram.endTime) : ""
+          const isLive = playingProgram?.status === "live"
+          
+          return (
+            <Card
+              key={channel.channelId}
+              onClick={() => handleChannelClick(channel.channelId)}
+              className={cn(
+                "p-4 hover:bg-secondary/50 transition-colors cursor-pointer",
+                selectedChannelId === channel.channelId && "ring-2 ring-primary bg-secondary/30",
               )}
-            </div>
-            <p className="text-sm text-muted-foreground">{channel.program}</p>
-          </Card>
-        ))}
+            >
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  {channel.image ? (
+                    <img 
+                      src={channel.image} 
+                      alt={channel.channelName}
+                      className="h-10 w-10 rounded object-cover"
+                    />
+                  ) : (
+                    <div className="h-10 w-10 rounded bg-destructive flex items-center justify-center text-sm font-bold">
+                      {channel.channelName.charAt(0)}
+                    </div>
+                  )}
+                  <div>
+                    <h3 className="font-semibold text-sm">{channel.channelName}</h3>
+                    {timeRange && (
+                      <p className="text-xs text-muted-foreground">{timeRange}</p>
+                    )}
+                  </div>
+                </div>
+                {isLive && (
+                  <Badge variant="destructive" className="text-xs">
+                    LIVE
+                  </Badge>
+                )}
+              </div>
+              {playingProgram && (
+                <p className="text-sm text-muted-foreground">{playingProgram.programName}</p>
+              )}
+            </Card>
+          )
+        })}
       </div>
     </div>
   )
