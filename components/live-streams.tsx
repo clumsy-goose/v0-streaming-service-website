@@ -52,10 +52,16 @@ export function LiveStreams({ channel, channels, onChannelChange }: LiveStreamsP
     const minutes = now.getMinutes().toString().padStart(2, "0")
     const timeStr = `${hours}:${minutes}`
     const programName = channel.playingProgram?.programName || ""
+    
+    // Get today's date in local timezone
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, "0")
+    const day = String(now.getDate()).padStart(2, "0")
+    const today = `${year}-${month}-${day}`
 
     router.push(
       `/watch?channel=${encodeURIComponent(channel.channelId)}&date=${encodeURIComponent(
-        now.toISOString().split("T")[0],
+        today,
       )}&time=${encodeURIComponent(timeStr)}&title=${encodeURIComponent(programName)}`,
     )
   }

@@ -23,11 +23,17 @@ function generateDateRange() {
     let status = "upcoming"
     if (i === 0) status = "active"
 
+    // Get date string in local timezone
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, "0")
+    const day = String(date.getDate()).padStart(2, "0")
+    const fullDate = `${year}-${month}-${day}` // YYYY-MM-DD format for comparison
+    
     dates.push({
       date: dateStr,
       day: dayStr,
       status,
-      fullDate: date.toISOString().split("T")[0], // YYYY-MM-DD format for comparison
+      fullDate,
     })
   }
 

@@ -9,11 +9,19 @@ export function HeroSection() {
   const router = useRouter()
   const { channels } = useChannels()
 
+  const getTodayDateString = () => {
+    const today = new Date()
+    const year = today.getFullYear()
+    const month = String(today.getMonth() + 1).padStart(2, "0")
+    const day = String(today.getDate()).padStart(2, "0")
+    return `${year}-${month}-${day}` // Returns YYYY-MM-DD in local timezone
+  }
+
   const handleWatchLive = () => {
     if (channels.length === 0) return
     
     const defaultChannel = channels[0]
-    const today = new Date().toISOString().split("T")[0]
+    const today = getTodayDateString()
     const now = new Date()
     const hours = now.getHours().toString().padStart(2, "0")
     const minutes = now.getMinutes().toString().padStart(2, "0")
@@ -26,7 +34,7 @@ export function HeroSection() {
   }
 
   const handleViewSchedule = () => {
-    const today = new Date().toISOString().split("T")[0]
+    const today = getTodayDateString()
     router.push(`/schedule?date=${today}`)
   }
 

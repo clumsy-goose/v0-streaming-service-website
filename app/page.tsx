@@ -14,7 +14,10 @@ import { useChannels } from "@/lib/channels-context"
 
 function getTodayDateString() {
   const today = new Date()
-  return today.toISOString().split("T")[0] // Returns YYYY-MM-DD
+  const year = today.getFullYear()
+  const month = String(today.getMonth() + 1).padStart(2, "0")
+  const day = String(today.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}` // Returns YYYY-MM-DD in local timezone
 }
 
 export default function HomePage() {
@@ -164,6 +167,7 @@ export default function HomePage() {
 
   const handleChannelClick = (channelId: string) => {
     const todayDate = getTodayDateString()
+    console.log('[home] todayDate', todayDate);
     router.push(`/schedule?channel=${encodeURIComponent(channelId)}&date=${encodeURIComponent(todayDate)}`)
   }
   

@@ -1,7 +1,7 @@
 "use client"
 
 import { useSearchParams, useRouter } from "next/navigation"
-import { Suspense, useMemo } from "react"
+import { Suspense, useMemo, useEffect } from "react"
 import { VideoPlayer } from "@/components/video-player"
 import { DayPlaylist } from "@/components/day-playlist"
 import { Header } from "@/components/header"
@@ -13,8 +13,16 @@ import { useChannels } from "@/lib/channels-context"
 function WatchPageContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
+  const getTodayDateString = () => {
+    const today = new Date()
+    const year = today.getFullYear()
+    const month = String(today.getMonth() + 1).padStart(2, "0")
+    const day = String(today.getDate()).padStart(2, "0")
+    return `${year}-${month}-${day}` // Returns YYYY-MM-DD in local timezone
+  }
+
   const channelId = searchParams.get("channel") || ""
-  const date = searchParams.get("date") || new Date().toISOString().split("T")[0]
+  const date = searchParams.get("date") || getTodayDateString()
   const time = searchParams.get("time") || "12:00"
   const title = searchParams.get("title") || "Program"
   
@@ -29,10 +37,37 @@ function WatchPageContent() {
   const currentProgram = useMemo(() => {
     if (!channel) return null
     
-    // Try to find program by title first (exact match or contains)
-    let program = channel.schedules.find(p => 
+    // First, try to use playingProgram if it matches
+    let program = channel.playingProgram
+    if (program && program.programId) {
+      // Check if playingProgram matches the title or time
+      const matchesTitle = program.programName === title || 
+                          program.programName.includes(title) || 
+                          title.includes(program.programName)
+      
+      if (matchesTitle) {
+        return program
+      }
+      
+      // Check if playingProgram is playing at the target time
+      if (time) {
+        const [hours, minutes] = time.split(':').map(Number)
+        const targetTime = new Date(date + `T${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`)
+        const targetTimestamp = Math.floor(targetTime.getTime() / 1000)
+        
+        if (targetTimestamp >= program.startTime && targetTimestamp < program.endTime) {
+          return program
+        }
+      }
+    }
+    
+    // Try to find program by title in schedules
+    const foundByTitle = channel.schedules.find(p => 
       p.programName === title || p.programName.includes(title) || title.includes(p.programName)
     )
+    if (foundByTitle) {
+      program = foundByTitle
+    }
     
     // If not found, try to find by time
     if (!program && time) {
@@ -41,20 +76,25 @@ function WatchPageContent() {
       const targetTimestamp = Math.floor(targetTime.getTime() / 1000)
       
       // Find program that is playing at the target time
-      program = channel.schedules.find(p => {
+      const foundByTime = channel.schedules.find(p => {
         return targetTimestamp >= p.startTime && targetTimestamp < p.endTime
       })
       
-      // If still not found, find the closest program by start time
-      if (!program) {
-        program = channel.schedules
+      if (foundByTime) {
+        program = foundByTime
+      } else {
+        // If still not found, find the closest program by start time
+        const closestProgram = channel.schedules
           .filter(p => Math.abs(p.startTime - targetTimestamp) < 3600) // Within 1 hour
           .sort((a, b) => Math.abs(a.startTime - targetTimestamp) - Math.abs(b.startTime - targetTimestamp))[0]
+        if (closestProgram) {
+          program = closestProgram
+        }
       }
     }
     
     // Fallback to playing program
-    if (!program) {
+    if (!program || !program.programId) {
       program = channel.playingProgram
     }
     

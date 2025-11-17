@@ -82,6 +82,7 @@ export function DayPlaylist({ channelId, date, currentTime }: DayPlaylistProps) 
     return filteredPrograms
   }, [channelId, date, channels])
 
+
   const loading = channels.length === 0
 
   return (
