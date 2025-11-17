@@ -216,7 +216,7 @@ export function ScheduleGrid({ selectedDate, selectedChannel, onChannelSelect }:
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       <div className="lg:col-span-1 space-y-4">
-        <h2 className="text-xl font-semibold mb-4">Channels</h2>
+        <h2 className="text-xl font-semibold mb-4">频道列表</h2>
         {loading && channels.length === 0 ? (
           <div className="text-center text-muted-foreground">Loading channels...</div>
         ) : channels.length === 0 ? (
@@ -248,13 +248,11 @@ export function ScheduleGrid({ selectedDate, selectedChannel, onChannelSelect }:
                   <div className="flex-1">
                     <h3 className="font-semibold">{channel.channelName}</h3>
                     <p className="text-xs text-muted-foreground">
-                      {isSelected ? getChannelTimeRange(channel) : ""}
+                      {getChannelTimeRange(channel)}
                     </p>
                   </div>
                 </div>
-                {isSelected && (
-                  <p className="text-sm text-muted-foreground line-clamp-1">{getCurrentShow(channel)}</p>
-                )}
+                <p className="text-sm text-muted-foreground line-clamp-1">{channel?.channelDescription}</p>
               </Card>
             )
           })
@@ -264,7 +262,7 @@ export function ScheduleGrid({ selectedDate, selectedChannel, onChannelSelect }:
       <div className="lg:col-span-3">
         <div className="mb-4">
           <h2 className="text-xl font-semibold">
-            Schedule for {channels.find(ch => ch.channelId === selectedChannelId)?.channelName || selectedChannel}
+            {channels.find(ch => ch.channelId === selectedChannelId)?.channelName || selectedChannel}
           </h2>
           <p className="text-sm text-muted-foreground">{selectedDate}</p>
         </div>

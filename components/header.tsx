@@ -23,7 +23,7 @@ export function Header() {
               href="/schedule"
               className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
             >
-              节目表
+              节目单
             </Link>
             <Link
               href="/rank"

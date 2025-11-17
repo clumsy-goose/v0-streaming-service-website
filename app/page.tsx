@@ -64,7 +64,7 @@ export default function HomePage() {
                   />
                 )}
               </div>
-              <div className="lg:col-span-1">
+              <div className="lg:col-span-1 flex">
                 <TrendingList />
               </div>
             </div>

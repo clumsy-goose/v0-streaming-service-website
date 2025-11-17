@@ -79,7 +79,7 @@ export function DateCarousel({ onDateSelect, onViewSchedule, selectedDate }: Dat
                 key={index}
                 onClick={() => handleDateClick(index)}
                 className={cn(
-                  "flex flex-col items-center gap-1 px-6 py-3 rounded-lg transition-colors shrink-0",
+                  "flex flex-col items-center gap-1 px-6 py-3 rounded-lg transition-colors shrink-0 cursor-pointer",
                   index === selectedIndex ? "bg-primary text-primary-foreground" : "hover:bg-secondary",
                 )}
               >
@@ -97,7 +97,7 @@ export function DateCarousel({ onDateSelect, onViewSchedule, selectedDate }: Dat
           </div>
           {onViewSchedule && (
             <Button variant="outline" onClick={onViewSchedule} className="shrink-0 bg-transparent">
-              查看节目表
+              查看节目单
             </Button>
           )}
           <Button

@@ -53,16 +53,16 @@ export function ChannelCarousel({ channels, selectedChannelId, onChannelSelect, 
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">频道列表</h2>
-        <div className="flex gap-2">
+        {/* <div className="flex gap-2">
           <Button variant="ghost" size="icon" onClick={handlePrev} disabled={currentPage === 0}>
             <ChevronLeft className="h-5 w-5" />
           </Button>
           <Button variant="ghost" size="icon" onClick={handleNext} disabled={currentPage === totalPages - 1}>
             <ChevronRight className="h-5 w-5" />
           </Button>
-        </div>
+        </div> */}
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 transition-all duration-300">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 transition-all duration-300">
         {visibleChannels.map((channel, index) => {
           const playingProgram = channel.playingProgram
           const timeRange = playingProgram ? formatTimeRange(playingProgram.startTime, playingProgram.endTime) : ""

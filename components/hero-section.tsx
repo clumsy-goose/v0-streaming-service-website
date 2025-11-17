@@ -52,7 +52,7 @@ export function HeroSection() {
               观看直播
             </Button>
             <Button size="lg" variant="outline" onClick={handleViewSchedule}>
-              查看节目表
+              查看节目单
             </Button>
           </div>
         </div>

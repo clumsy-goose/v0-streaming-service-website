@@ -38,7 +38,7 @@ function ScheduleContent() {
       <Header />
       <DateCarousel selectedDate={selectedDate} onDateSelect={handleDateSelect} />
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8">TV Schedule</h1>
+        <h1 className="text-3xl font-bold mb-8">节目单</h1>
         <ScheduleGrid
           selectedDate={selectedDate}
           selectedChannel={selectedChannel}

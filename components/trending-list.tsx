@@ -12,12 +12,12 @@ const trending = [
 
 export function TrendingList() {
   return (
-    <Card className="p-6">
+    <Card className="p-6 h-full flex flex-col">
       <div className="flex items-center gap-2 mb-6">
         <TrendingUp className="h-5 w-5 text-destructive" />
         <h2 className="text-xl font-bold">热榜</h2>
       </div>
-      <div className="space-y-4">
+      <div className="space-y-4 flex-1 overflow-y-auto">
         {trending.map((item) => (
           <div
             key={item.rank}
@@ -33,7 +33,7 @@ export function TrendingList() {
           </div>
         ))}
       </div>
-      <button className="w-full mt-4 text-sm text-primary hover:underline">查看总榜 →</button>
+      <button className="w-full mt-4 text-sm text-primary hover:underline shrink-0 cursor-pointer">查看总榜 →</button>
     </Card>
   )
 }
