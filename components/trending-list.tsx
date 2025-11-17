@@ -1,5 +1,7 @@
 import { Card } from "@/components/ui/card"
 import { TrendingUp } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { cn } from "@/lib/utils"
 
 const trending = [
   { rank: 1, title: "2023-2024赛季 NBA 总决赛第五场", views: "2021" },
@@ -11,6 +13,12 @@ const trending = [
 ]
 
 export function TrendingList() {
+  const router = useRouter()
+
+  const handleViewAll = () => {
+    router.push("/rank")
+  }
+
   return (
     <Card className="p-6 h-full flex flex-col">
       <div className="flex items-center gap-2 mb-6">
@@ -18,22 +26,37 @@ export function TrendingList() {
         <h2 className="text-xl font-bold">热榜</h2>
       </div>
       <div className="space-y-4 flex-1 overflow-y-auto">
-        {trending.map((item) => (
-          <div
-            key={item.rank}
-            className="flex gap-4 p-3 rounded-lg hover:bg-secondary/50 transition-colors cursor-pointer"
-          >
-            <div className="flex items-center justify-center h-8 w-8 rounded bg-primary/10 text-primary font-bold shrink-0">
-              {item.rank}
+        {trending.map((item) => {
+          const isTopThree = item.rank <= 3
+          return (
+            <div
+              key={item.rank}
+              className="flex gap-4 p-3 rounded-lg hover:bg-secondary/50 transition-colors cursor-pointer"
+            >
+              <div
+                className={cn(
+                  "flex items-center justify-center h-8 w-8 rounded font-bold shrink-0",
+                  isTopThree
+                    ? "bg-destructive text-white"
+                    : "bg-primary/10 text-primary"
+                )}
+              >
+                {item.rank}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-medium text-sm mb-1 line-clamp-2">{item.title}</h3>
+                <p className="text-xs text-muted-foreground">{item.views} 观看</p>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-medium text-sm mb-1 line-clamp-2">{item.title}</h3>
-              <p className="text-xs text-muted-foreground">{item.views} views</p>
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
-      <button className="w-full mt-4 text-sm text-primary hover:underline shrink-0 cursor-pointer">查看总榜 →</button>
+      <button 
+        onClick={handleViewAll}
+        className="w-full mt-4 text-sm text-primary hover:underline shrink-0 cursor-pointer"
+      >
+        查看总榜 →
+      </button>
     </Card>
   )
 }
