@@ -206,7 +206,7 @@ export default function HomePage() {
           </>
         )}
         {/* Test section */}
-        <div className="mt-8 p-4 border rounded">
+        {/* <div className="mt-8 p-4 border rounded">
           <h3 className="text-lg font-semibold mb-2">测试：获取全部频道</h3>
           <button
             className="px-4 py-2 rounded bg-primary text-primary-foreground hover:opacity-90"
@@ -254,7 +254,7 @@ export default function HomePage() {
           >
             获取频道节目单（测试）
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   )
