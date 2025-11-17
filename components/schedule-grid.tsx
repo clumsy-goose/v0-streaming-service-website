@@ -5,29 +5,8 @@ import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { useEffect, useState } from "react"
-
-interface Channel {
-  Id: string
-  Name: string
-  PlaybackURL?: string
-}
-
-interface ProgramSchedule {
-  Id: string
-  Name: string
-  PlaybackConf: {
-    StartTime: number
-    Duration: number
-  }
-}
-
-interface Program {
-  time: string
-  title: string
-  status: string
-  startTime: number
-  endTime: number
-}
+import type { Channel } from "@/config"
+import { useChannels } from "@/lib/channels-context"
 
 function formatTime(timestamp: number): string {
   const date = new Date(timestamp * 1000)
@@ -45,8 +24,17 @@ function getChannelLogo(name: string): string {
   return name.substring(0, 2).toUpperCase()
 }
 
-function processPrograms(programs: ProgramSchedule[], selectedDate: string): Program[] {
-  if (!programs || programs.length === 0) {
+interface ProcessedProgram {
+  time: string
+  title: string
+  status: "live" | "ended" | "not-started"
+  startTime: number
+  endTime: number
+  programId: string
+}
+
+function processPrograms(apiPrograms: any[], selectedDate: string): ProcessedProgram[] {
+  if (!apiPrograms || apiPrograms.length === 0) {
     console.log("⚠️ No programs to process")
     return []
   }
@@ -60,7 +48,7 @@ function processPrograms(programs: ProgramSchedule[], selectedDate: string): Pro
   const selectedDateEnd = selectedDateStart + 24 * 60 * 60 - 1
 
   console.log("🔍 Processing programs:", {
-    programCount: programs.length,
+    programCount: apiPrograms.length,
     selectedDate,
     selectedDateStart,
     selectedDateEnd,
@@ -68,19 +56,22 @@ function processPrograms(programs: ProgramSchedule[], selectedDate: string): Pro
     selectedDateEndISO: new Date(selectedDateEnd * 1000).toISOString(),
     currentTimestamp,
     currentTimeISO: new Date(currentTimestamp * 1000).toISOString(),
-    firstProgramStartTime: programs[0]?.PlaybackConf?.StartTime,
-    firstProgramDate: programs[0]?.PlaybackConf?.StartTime 
-      ? new Date(programs[0].PlaybackConf.StartTime * 1000).toISOString()
+    firstProgramStartTime: apiPrograms[0]?.PlaybackConf?.StartTime,
+    firstProgramDate: apiPrograms[0]?.PlaybackConf?.StartTime 
+      ? new Date(apiPrograms[0].PlaybackConf.StartTime * 1000).toISOString()
       : 'N/A'
   })
 
   // Sort by start time
-  const sortedPrograms = [...programs].sort((a, b) => a.PlaybackConf.StartTime - b.PlaybackConf.StartTime)
+  const sortedPrograms = [...apiPrograms].sort((a, b) => 
+    (a.PlaybackConf?.StartTime || 0) - (b.PlaybackConf?.StartTime || 0)
+  )
 
   // Filter programs that fall within the selected date
   const filteredPrograms = sortedPrograms.filter((program) => {
-    const startTime = program.PlaybackConf.StartTime
-    const endTime = startTime + program.PlaybackConf.Duration
+    const startTime = program.PlaybackConf?.StartTime || 0
+    const duration = program.PlaybackConf?.Duration || 0
+    const endTime = startTime + duration
     
     // Program starts within selected date OR program spans across the selected date
     const matchesDate = (
@@ -93,136 +84,133 @@ function processPrograms(programs: ProgramSchedule[], selectedDate: string): Pro
 
   console.log(`✅ Filtered ${filteredPrograms.length} programs out of ${sortedPrograms.length} for date ${selectedDate}`)
 
-  // Convert to Program format
+  // Convert to ProcessedProgram format
   return filteredPrograms.map((program) => {
-    const startTime = program.PlaybackConf.StartTime
-    const endTime = startTime + program.PlaybackConf.Duration
+    const programId = program.Id || ""
+    const programName = program.Name || ""
+    const startTime = program.PlaybackConf?.StartTime || 0
+    const duration = program.PlaybackConf?.Duration || 0
+    const endTime = startTime + duration
 
-    let status = "notStarted"
+    let status: "live" | "ended" | "not-started" = "not-started"
     if (currentTimestamp >= endTime) {
       status = "ended"
     } else if (currentTimestamp >= startTime && currentTimestamp < endTime) {
-        status = "live"
+      status = "live"
     }
 
     return {
       time: formatTime(startTime),
-      title: program.Name,
+      title: programName || "",
       status,
       startTime,
       endTime,
+      programId,
     }
   })
 }
 
 interface ScheduleGridProps {
   selectedDate: string
-  selectedChannel: string
+  selectedChannel: string // channelId or channelName
   onChannelSelect: (channel: string) => void
 }
 
 export function ScheduleGrid({ selectedDate, selectedChannel, onChannelSelect }: ScheduleGridProps) {
-  const [channels, setChannels] = useState<Channel[]>([])
-  const [programs, setPrograms] = useState<Program[]>([])
-  const [loading, setLoading] = useState(true)
+  const { channels, loading } = useChannels()
+  const [programs, setPrograms] = useState<ProcessedProgram[]>([])
   const [selectedChannelId, setSelectedChannelId] = useState<string>("")
 
-  // Fetch channels on mount
+  // Initialize selectedChannelId from context channels
   useEffect(() => {
-    async function fetchChannels() {
-      try {
-        const response = await fetch("/api/test/channels")
-        const result = await response.json()
-        if (result.ok && result.data?.Response?.Infos) {
-          const channelList = result.data.Response.Infos
-          setChannels(channelList)
-          
-          // Set the first channel as default if no channel is selected
-          if (channelList.length > 0) {
-            const firstChannel = channelList[0]
-            if (!selectedChannel) {
-              onChannelSelect(firstChannel.Name)
-              setSelectedChannelId(firstChannel.Id)
-            } else {
-              // Find the selected channel ID
-              const channel = channelList.find((ch: Channel) => ch.Name === selectedChannel)
-              if (channel) {
-                setSelectedChannelId(channel.Id)
-              }
-            }
-          }
+    if (channels.length > 0) {
+      if (!selectedChannel) {
+        const firstChannel = channels[0]
+        onChannelSelect(firstChannel.channelId)
+        setSelectedChannelId(firstChannel.channelId)
+      } else {
+        // Find the selected channel by Id or Name
+        const channel = channels.find(
+          (ch) => ch.channelId === selectedChannel || ch.channelName === selectedChannel
+        )
+        if (channel) {
+          setSelectedChannelId(channel.channelId)
         }
-      } catch (error) {
-        console.error("Failed to fetch channels:", error)
-      } finally {
-        setLoading(false)
       }
     }
-    fetchChannels()
-  }, [])
+  }, [channels, selectedChannel, onChannelSelect])
 
   // Update selectedChannelId when selectedChannel changes
   useEffect(() => {
-    const channel = channels.find((ch) => ch.Name === selectedChannel)
+    const channel = channels.find(
+      (ch) => ch.channelId === selectedChannel || ch.channelName === selectedChannel
+    )
     if (channel) {
-      setSelectedChannelId(channel.Id)
+      setSelectedChannelId(channel.channelId)
     }
   }, [selectedChannel, channels])
 
+  // Use programs from selected channel's schedules, filtered by date
   useEffect(() => {
-    console.log("🚀 ~ ScheduleGrid ~ channels:", channels);
-  }, [channels])
-
-  useEffect(()=>{
-    console.log("🚀 ~ ScheduleGrid ~ programs:", programs)
-  },[programs])
-
-  // Fetch programs when channel or date changes
-  useEffect(() => {
-    async function fetchPrograms() {
-      if (!selectedChannelId) return
-
-      try {
-        setLoading(true)
-        // Request 7 days worth of programs (7 * 24 * 60 * 60 = 604800 seconds)
-        const timeWindow = 7 * 24 * 60 * 60
-        const response = await fetch(
-          `/api/test/program-schedules?channelId=${selectedChannelId}&timeWindow=${timeWindow}&pageNum=1&pageSize=1000`
-        )
-        const result = await response.json()
-        console.log("📡 API Response:", result)
-        if (result.ok && result.data?.Response?.Infos) {
-          const programList = result.data.Response.Infos as ProgramSchedule[]
-          console.log("📋 Raw program list:", programList)
-          const processedPrograms = processPrograms(programList, selectedDate)
-          setPrograms(processedPrograms)
-        } else {
-          console.error("❌ API returned error or no data:", result)
-          setPrograms([])
-        }
-      } catch (error) {
-        console.error("Failed to fetch programs:", error)
-        setPrograms([])
-      } finally {
-        setLoading(false)
-      }
+    if (!selectedChannelId || channels.length === 0) {
+      setPrograms([])
+      return
     }
-    fetchPrograms()
-  }, [selectedChannelId, selectedDate])
 
-  const getCurrentShow = (channelName: string) => {
-    console.log("🚀 ~ getCurrentShow ~ programs:", programs)
-    if (programs.length === 0) return "Loading..."
-    const liveProgram = programs.find((p) => p.status === "live")
-    return liveProgram ? liveProgram.title : "No live program"
+    const selectedChannelData = channels.find(ch => ch.channelId === selectedChannelId)
+    if (!selectedChannelData) {
+      setPrograms([])
+      return
+    }
+
+    // Filter programs for the selected date
+    const selectedDateObj = new Date(selectedDate + "T00:00:00")
+    const selectedDateStart = Math.floor(selectedDateObj.getTime() / 1000)
+    const selectedDateEnd = selectedDateStart + 24 * 60 * 60 - 1
+
+    const filteredPrograms = selectedChannelData.schedules
+      .filter((program) => {
+        const startTime = program.startTime
+        const endTime = program.endTime
+        
+        return (
+          (startTime >= selectedDateStart && startTime <= selectedDateEnd) ||
+          (startTime < selectedDateStart && endTime > selectedDateStart)
+        )
+      })
+      .map((program) => {
+        const currentTimestamp = Math.floor(Date.now() / 1000)
+        let status: "live" | "ended" | "not-started" = "not-started"
+        if (currentTimestamp >= program.endTime) {
+          status = "ended"
+        } else if (currentTimestamp >= program.startTime && currentTimestamp < program.endTime) {
+          status = "live"
+        }
+
+        return {
+          time: formatTime(program.startTime),
+          title: program.programName,
+          status,
+          startTime: program.startTime,
+          endTime: program.endTime,
+          programId: program.programId,
+        }
+      })
+      .sort((a, b) => a.startTime - b.startTime)
+
+    setPrograms(filteredPrograms)
+  }, [selectedChannelId, selectedDate, channels])
+
+  const getCurrentShow = (channel: Channel) => {
+    if (!channel || !channel.playingProgram) return "Loading..."
+    return channel.playingProgram.programName || "No live program"
   }
 
-  const getChannelTimeRange = () => {
-    console.log("🚀 ~ getChannelTimeRange ~ programs:", programs)
-    if (programs.length === 0) return "--:--"
-    const firstProgram = programs[0]
-    const lastProgram = programs[programs.length - 1]
-    return `${firstProgram?.time || "--:--"}-${formatTime(lastProgram?.endTime || 0)}`
+  const getChannelTimeRange = (channel: Channel) => {
+    if (!channel || !channel.playingProgram) return "--:--"
+    const startTime = channel.playingProgram.startTime
+    const endTime = channel.playingProgram.endTime
+    return `${formatTime(startTime)}-${formatTime(endTime)}`
   }
 
   return (
@@ -231,43 +219,56 @@ export function ScheduleGrid({ selectedDate, selectedChannel, onChannelSelect }:
         <h2 className="text-xl font-semibold mb-4">Channels</h2>
         {loading && channels.length === 0 ? (
           <div className="text-center text-muted-foreground">Loading channels...</div>
+        ) : channels.length === 0 ? (
+          <div className="text-center text-muted-foreground">暂无频道数据</div>
         ) : (
-          channels.map((channel) => (
-          <Card
-              key={channel.Id}
-              onClick={() => onChannelSelect(channel.Name)}
-            className={cn(
-              "p-4 hover:bg-secondary/50 transition-colors cursor-pointer",
-                selectedChannel === channel.Name && "ring-2 ring-primary bg-secondary/30"
-            )}
-          >
-            <div className="flex items-center gap-3 mb-2">
-                <div className="h-12 w-12 rounded bg-destructive flex items-center justify-center font-bold text-sm">
-                  {getChannelLogo(channel.Name)}
-              </div>
-              <div className="flex-1">
-                  <h3 className="font-semibold">{channel.Name}</h3>
-                  <p className="text-xs text-muted-foreground">
-                    {selectedChannel === channel.Name ? getChannelTimeRange() : ""}
-                  </p>
+          channels.map((channel) => {
+            const isSelected = selectedChannel === channel.channelId || selectedChannel === channel.channelName
+            return (
+              <Card
+                key={channel.channelId}
+                onClick={() => onChannelSelect(channel.channelId)}
+                className={cn(
+                  "p-4 hover:bg-secondary/50 transition-colors cursor-pointer",
+                  isSelected && "ring-2 ring-primary bg-secondary/30"
+                )}
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  {channel.image ? (
+                    <img 
+                      src={channel.image} 
+                      alt={channel.channelName}
+                      className="h-12 w-12 rounded object-cover"
+                    />
+                  ) : (
+                    <div className="h-12 w-12 rounded bg-destructive flex items-center justify-center font-bold text-sm">
+                      {getChannelLogo(channel.channelName)}
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <h3 className="font-semibold">{channel.channelName}</h3>
+                    <p className="text-xs text-muted-foreground">
+                      {isSelected ? getChannelTimeRange(channel) : ""}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              {selectedChannel === channel.Name && (
-                <p className="text-sm text-muted-foreground line-clamp-1">{getCurrentShow(channel.Name)}</p>
-              )}
-          </Card>
-          ))
+                {isSelected && (
+                  <p className="text-sm text-muted-foreground line-clamp-1">{getCurrentShow(channel)}</p>
+                )}
+              </Card>
+            )
+          })
         )}
       </div>
 
       <div className="lg:col-span-3">
         <div className="mb-4">
-          <h2 className="text-xl font-semibold">Schedule for {selectedChannel}</h2>
+          <h2 className="text-xl font-semibold">
+            Schedule for {channels.find(ch => ch.channelId === selectedChannelId)?.channelName || selectedChannel}
+          </h2>
           <p className="text-sm text-muted-foreground">{selectedDate}</p>
         </div>
-        {loading ? (
-          <div className="text-center text-muted-foreground py-8">Loading schedule...</div>
-        ) : programs.length === 0 ? (
+        {programs.length === 0 ? (
           <div className="text-center text-muted-foreground py-8">No programs scheduled for this date</div>
         ) : (
         <div className="flex flex-col gap-3">
@@ -301,7 +302,7 @@ export function ScheduleGrid({ selectedDate, selectedChannel, onChannelSelect }:
                         Ended
                       </Badge>
                     )}
-                    {item.status === "notStarted" && (
+                    {item.status === "not-started" && (
                       <Badge variant="secondary" className="bg-muted text-muted-foreground">
                         Not Started
                       </Badge>
@@ -314,7 +315,7 @@ export function ScheduleGrid({ selectedDate, selectedChannel, onChannelSelect }:
             return isClickable ? (
               <Link
                 key={index}
-                href={`/watch?channel=${encodeURIComponent(selectedChannel)}&date=${selectedDate}&time=${item.time}&title=${encodeURIComponent(item.title)}`}
+                href={`/watch?channel=${encodeURIComponent(selectedChannelId)}&date=${selectedDate}&time=${item.time}&title=${encodeURIComponent(item.title)}`}
                 className="block"
               >
                 {content}

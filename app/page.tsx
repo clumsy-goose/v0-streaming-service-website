@@ -10,6 +10,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import type { Channel, Program } from "@/config"
 import { channelsMap, programsMap } from "@/config"
+import { useChannels } from "@/lib/channels-context"
 
 function getTodayDateString() {
   const today = new Date()
@@ -17,9 +18,8 @@ function getTodayDateString() {
 }
 
 export default function HomePage() {
-  const [channels, setChannels] = useState<Channel[]>([])
+  const { channels, setChannels, loading, setLoading } = useChannels()
   const [selectedChannelId, setSelectedChannelId] = useState<string>("")
-  const [loading, setLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {

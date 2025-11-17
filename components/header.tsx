@@ -25,17 +25,17 @@ export function Header() {
               Schedule
             </Link>
             <Link
-              href="/movies"
+              href="/rank"
               className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
             >
-              Movies
+              Rank
             </Link>
-            <Link
+            {/* <Link
               href="/shows"
               className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
             >
               Shows
-            </Link>
+            </Link> */}
           </nav>
         </div>
         <div className="flex items-center gap-4">

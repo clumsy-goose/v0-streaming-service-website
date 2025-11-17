@@ -1,21 +1,51 @@
 "use client"
 
 import { useSearchParams, useRouter } from "next/navigation"
-import { Suspense } from "react"
+import { Suspense, useMemo } from "react"
 import { VideoPlayer } from "@/components/video-player"
 import { DayPlaylist } from "@/components/day-playlist"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Clock } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { useChannels } from "@/lib/channels-context"
 
 function WatchPageContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const channel = searchParams.get("channel") || "News 1"
+  const channelId = searchParams.get("channel") || ""
   const date = searchParams.get("date") || new Date().toISOString().split("T")[0]
   const time = searchParams.get("time") || "12:00"
   const title = searchParams.get("title") || "Program"
+  
+  const { channels, loading } = useChannels()
+
+  // Find channel from context
+  const channel = useMemo(() => {
+    return channels.find(ch => ch.channelId === channelId) || null
+  }, [channels, channelId])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-6">
+          <div className="text-center py-8">加载中...</div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!channel) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-6">
+          <div className="text-center py-8">频道不存在或数据未加载</div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -37,9 +67,7 @@ function WatchPageContent() {
                 <div className="flex-1">
                   <h1 className="text-2xl font-bold text-foreground mb-2">{title}</h1>
                   <p className="text-muted-foreground leading-relaxed">
-                    Experience comprehensive coverage and in-depth analysis of today's most important stories. Our
-                    expert team brings you breaking news, exclusive interviews, and detailed reports from around the
-                    world.
+                    {channel.channelDescription || "Stream TV 是一项免费的在线流媒体服务"}
                   </p>
                 </div>
               </div>
@@ -54,14 +82,14 @@ function WatchPageContent() {
                   <span>{time}</span>
                 </div>
                 <span className="text-muted-foreground">•</span>
-                <span className="font-medium text-foreground">{channel}</span>
+                <span className="font-medium text-foreground">{channel.channelName}</span>
               </div>
             </div>
           </div>
 
           {/* Playlist - 1/4 width */}
           <div className="lg:col-span-1">
-            <DayPlaylist channel={channel} date={date} currentTime={time} />
+            <DayPlaylist channelId={channelId} date={date} currentTime={time} />
           </div>
         </div>
       </div>

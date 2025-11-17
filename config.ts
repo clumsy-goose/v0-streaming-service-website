@@ -221,9 +221,9 @@ export const programsMap: Record<string, ProgramBasicInfo> = {
 		programDescription:
 			"2023-2024赛季 NBA 总决赛第四场，凯尔特人 vs 独行侠，比赛精彩纷呈，凯尔特人以84-122不敌独行侠，系列赛总比分3-1，独行侠扳回一城。",
 	},
-	'NBA_5': {
+	'g5': {
 		programName: "2023-2024赛季 NBA 总决赛第五场",
 		programDescription:
-			"2023-2024赛季 NBA 总决赛第五场，凯尔特人 vs 独行侠，比赛精彩纷呈，凯尔特人最终以108-95战胜独行侠，系列赛总比分5-0夺冠。",
+			"2023-2024赛季 NBA 总决赛第五场，凯尔特人 vs 独行侠，比赛精彩纷呈，凯尔特人最终以106-88战胜独行侠，系列赛总比分4-1夺冠。",
 	},
 }

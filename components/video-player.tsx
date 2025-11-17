@@ -4,9 +4,10 @@ import { useEffect, useRef, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Play, Pause, Volume2, VolumeX, Maximize, Settings } from "lucide-react"
+import type { Channel } from "@/config"
 
 interface VideoPlayerProps {
-  channel: string
+  channel: Channel
   programTime?: string
 }
 
@@ -18,7 +19,7 @@ export function VideoPlayer({ channel, programTime }: VideoPlayerProps) {
 
   useEffect(() => {
     const video = videoRef.current
-    if (!video) return
+    if (!video || !channel.playbackURL) return
 
     const cleanup = () => {
       if (hlsRef.current) {
@@ -30,11 +31,11 @@ export function VideoPlayer({ channel, programTime }: VideoPlayerProps) {
 
     cleanup()
 
-    const hlsUrl = `http://1376254607.ap-singapore.streampackage.srclivepull.myqcloud.com/channel_assembly/68FE543512970EAA37BD/snooker.m3u8`
+    const hlsUrl = channel.playbackURL
 
     if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = hlsUrl
-      console.log("[v0] Loading HLS stream natively for", channel, programTime)
+      console.log("[v0] Loading HLS stream natively for", channel.channelName, programTime)
     } else if (typeof window !== "undefined") {
       import("hls.js").then(({ default: Hls }) => {
         if (Hls.isSupported()) {
@@ -48,7 +49,7 @@ export function VideoPlayer({ channel, programTime }: VideoPlayerProps) {
           hls.attachMedia(video)
 
           hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            console.log("[v0] HLS manifest loaded for", channel, programTime)
+            console.log("[v0] HLS manifest loaded for", channel.channelName, programTime)
           })
 
           hls.on(Hls.Events.ERROR, (event, data) => {
@@ -72,7 +73,7 @@ export function VideoPlayer({ channel, programTime }: VideoPlayerProps) {
     }
 
     return cleanup
-  }, [channel, programTime])
+  }, [channel.playbackURL, channel.channelId, programTime])
 
   const togglePlay = () => {
     const video = videoRef.current
