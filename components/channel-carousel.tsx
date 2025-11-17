@@ -52,7 +52,7 @@ export function ChannelCarousel({ channels, selectedChannelId, onChannelSelect, 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Channels</h2>
+        <h2 className="text-2xl font-bold">频道列表</h2>
         <div className="flex gap-2">
           <Button variant="ghost" size="icon" onClick={handlePrev} disabled={currentPage === 0}>
             <ChevronLeft className="h-5 w-5" />

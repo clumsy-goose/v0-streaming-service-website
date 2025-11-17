@@ -2,12 +2,12 @@ import { Card } from "@/components/ui/card"
 import { TrendingUp } from "lucide-react"
 
 const trending = [
-  { rank: 1, title: "Breaking: Major Policy Announcement", views: "2.4M" },
-  { rank: 2, title: "Sports: Championship Finals Tonight", views: "1.8M" },
-  { rank: 3, title: "Tech: New Innovation Unveiled", views: "1.5M" },
-  { rank: 4, title: "Entertainment: Award Show Highlights", views: "1.2M" },
-  { rank: 5, title: "Finance: Market Analysis Update", views: "980K" },
-  { rank: 6, title: "Weather: Storm Warning Issued", views: "850K" },
+  { rank: 1, title: "2023-2024赛季 NBA 总决赛第五场", views: "2021" },
+  { rank: 2, title: "2023-2024赛季 NBA 总决赛第一场", views: "1981" },
+  { rank: 3, title: "2025世界斯诺克锦标赛决赛(第四阶段)", views: "1861" },
+  { rank: 4, title: "2025世界斯诺克锦标赛第一轮(第一阶段)", views: "1741" },
+  { rank: 5, title: "第 1 期上:王勉欢乐开场,李宇春脱口秀首秀", views: "1621" },
+  // { rank: 6, title: "Weather: Storm Warning Issued", views: "850K" },
 ]
 
 export function TrendingList() {
@@ -15,7 +15,7 @@ export function TrendingList() {
     <Card className="p-6">
       <div className="flex items-center gap-2 mb-6">
         <TrendingUp className="h-5 w-5 text-destructive" />
-        <h2 className="text-xl font-bold">Trending Now</h2>
+        <h2 className="text-xl font-bold">热榜</h2>
       </div>
       <div className="space-y-4">
         {trending.map((item) => (
@@ -33,7 +33,7 @@ export function TrendingList() {
           </div>
         ))}
       </div>
-      <button className="w-full mt-4 text-sm text-primary hover:underline">View All Trending →</button>
+      <button className="w-full mt-4 text-sm text-primary hover:underline">查看总榜 →</button>
     </Card>
   )
 }

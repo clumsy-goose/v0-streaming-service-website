@@ -14,8 +14,8 @@ function generateDateRange() {
     const date = new Date(today)
     date.setDate(today.getDate() + i)
 
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+    const monthNames = ["1 月", "2 月", "3 月", "4 月", "5 月", "6 月", "7 月", "8 月", "9 月", "10 月", "11 月", "12月"]
+    const dayNames = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"]
 
     const dateStr = `${monthNames[date.getMonth()]} ${date.getDate()}`
     const dayStr = dayNames[date.getDay()]
@@ -91,7 +91,7 @@ export function DateCarousel({ onDateSelect, onViewSchedule, selectedDate }: Dat
           </div>
           {onViewSchedule && (
             <Button variant="outline" onClick={onViewSchedule} className="shrink-0 bg-transparent">
-              View Schedule
+              查看节目表
             </Button>
           )}
           <Button

@@ -169,17 +169,23 @@ export function LiveStreams({ channel, channels, onChannelChange }: LiveStreamsP
           </div>
 
           <div className="p-6 flex flex-col justify-center space-y-4">
-            <div>
+            <div className="mb-20">
               <h3 className="text-2xl font-bold">{channel.channelName}</h3>
-            </div>
-
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Now Playing</p>
-              <p className="text-lg font-semibold">{channel.playingProgram?.programName || "暂无节目"}</p>
-            </div>
-
-            <div>
               <p className="text-sm text-muted-foreground leading-relaxed">{channel.channelDescription}</p>
+            </div>
+
+            <div>
+              <p className="text-lg font-semibold">正在播放</p>
+              <p className="text-sm text-muted-foreground mb-1">{channel.playingProgram?.programName || "暂无节目"}</p>
+            </div>
+            <div>
+              <p className="text-lg font-semibold">节目介绍</p>
+              <p className="text-sm text-muted-foreground mb-1">{channel.playingProgram?.programDescription || "暂无节目简介"}</p>
+            </div>
+
+            <div className="mt-20">
+              <p className="text-lg font-semibold">精彩预告</p>
+              <p className="text-sm text-muted-foreground mb-1">{channel.nextProgram?.programName || "暂无节目"}</p>
             </div>
           </div>
         </div>

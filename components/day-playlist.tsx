@@ -87,7 +87,7 @@ export function DayPlaylist({ channelId, date, currentTime }: DayPlaylistProps) 
   return (
     <Card className="h-[calc(100vh-8rem)]">
       <div className="p-4 border-b">
-        <h2 className="font-semibold">Today's Schedule</h2>
+        <h2 className="font-semibold">今日节目单</h2>
         <p className="text-sm text-muted-foreground">{date}</p>
       </div>
       <ScrollArea className="h-[calc(100%-5rem)]">
