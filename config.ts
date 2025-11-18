@@ -147,7 +147,7 @@ export const programsMap: Record<string, ProgramBasicInfo> = {
 	'2025_Snooker_WC_FirstRound_1': {
 		programName: "2025世界斯诺克锦标赛第一轮(第一阶段)",
 		programDescription:
-			"2025年世界斯诺克锦标赛第一轮(第一阶段)，中国选手赵心童对阵杰克琼斯，第一阶段结束，赵心童7-7杰克琼斯，取得大比分领先。",
+			"2025年世界斯诺克锦标赛第一轮(第一阶段)，中国选手赵心童对阵杰克琼斯，第一阶段结束，赵心童7-1杰克琼斯，取得大比分领先。",
 	},
 	'2025_Snooker_WC_FirstRound_2': {
 		programName: "2025世界斯诺克锦标赛第一轮(第二阶段)",

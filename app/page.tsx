@@ -180,6 +180,31 @@ export default function HomePage() {
           >
             获取频道节目单（测试）
           </button>
+          <div className="h-4" />
+          <h3 className="text-lg font-semibold mb-2">测试：获取频道节目</h3>
+          <button
+            className="px-4 py-2 rounded bg-primary text-primary-foreground hover:opacity-90"
+            onClick={async () => {
+              try {
+                const channelId = window.prompt('请输入 ChannelId：') || ''
+                if (!channelId) return
+                const params = new URLSearchParams({ channelId, pageNum: '1', pageSize: '10' })
+                const res = await fetch(`/api/test/programs?${params.toString()}`, { method: 'GET' })
+                const json = await res.json()
+                if (!json.ok) {
+                  alert(`请求失败: ${json.error || 'unknown error'}`)
+                  return
+                }
+                const total = json?.data?.Response?.TotalNum ?? json?.data?.Response?.TotalCount ?? (json?.data?.Programs?.length ?? 0)
+                alert(`请求成功，节目数：${total}`)
+                console.log('DescribeStreamPackageLinearAssemblyPrograms result:', json.data)
+              } catch (e: any) {
+                alert(`异常: ${e?.message || e}`)
+              }
+            }}
+          >
+            获取频道节目（测试）
+          </button>
         </div> */}
       </div>
     </div>

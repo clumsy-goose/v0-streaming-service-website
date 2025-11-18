@@ -46,4 +46,21 @@ export async function describeStreamPackageLinearAssemblyChannels(params: Descri
 	return mdpRequest('DescribeStreamPackageLinearAssemblyChannels', payload);
 }
 
+// 4) DescribeStreamPackageLinearAssemblyPrograms
+export type DescribeProgramsParams = {
+	ChannelId: string;
+	PageNum?: number;
+	PageSize?: number;
+};
+
+export async function describeStreamPackageLinearAssemblyPrograms(params: DescribeProgramsParams) {
+	if (!params?.ChannelId) throw new Error('ChannelId is required');
+	const payload: Record<string, any> = {
+		ChannelId: params.ChannelId,
+	};
+	if (params.PageNum !== undefined) payload.PageNum = params.PageNum;
+	if (params.PageSize !== undefined) payload.PageSize = params.PageSize;
+	return mdpRequest('DescribeStreamPackageLinearAssemblyPrograms', payload);
+}
+
 
