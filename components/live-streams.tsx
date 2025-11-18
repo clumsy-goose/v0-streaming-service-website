@@ -23,20 +23,22 @@ export function LiveStreams({ channel, channels, onChannelChange }: LiveStreamsP
   const router = useRouter()
 
   const currentIndex = channels.findIndex(c => c.channelId === channel.channelId)
-  const canGoPrev = currentIndex > 0
-  const canGoNext = currentIndex < channels.length - 1
 
   const handlePrev = () => {
-    if (canGoPrev && onChannelChange) {
+    if (onChannelChange && channels.length > 0) {
       setIsPlaying(false)
-      onChannelChange(channels[currentIndex - 1].channelId)
+      // 如果到达第一个，循环到最后一个
+      const prevIndex = currentIndex > 0 ? currentIndex - 1 : channels.length - 1
+      onChannelChange(channels[prevIndex].channelId)
     }
   }
 
   const handleNext = () => {
-    if (canGoNext && onChannelChange) {
+    if (onChannelChange && channels.length > 0) {
       setIsPlaying(false)
-      onChannelChange(channels[currentIndex + 1].channelId)
+      // 如果到达最后一个，循环到第一个
+      const nextIndex = currentIndex < channels.length - 1 ? currentIndex + 1 : 0
+      onChannelChange(channels[nextIndex].channelId)
     }
   }
 
@@ -113,7 +115,6 @@ export function LiveStreams({ channel, channels, onChannelChange }: LiveStreamsP
             size="icon"
             variant="outline"
             onClick={handlePrev}
-            disabled={!canGoPrev}
             className="h-8 w-8 bg-transparent"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -123,7 +124,6 @@ export function LiveStreams({ channel, channels, onChannelChange }: LiveStreamsP
             size="icon"
             variant="outline"
             onClick={handleNext}
-            disabled={!canGoNext}
             className="h-8 w-8 bg-transparent"
           >
             <ChevronRight className="h-4 w-4" />

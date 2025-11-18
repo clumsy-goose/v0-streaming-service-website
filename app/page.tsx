@@ -6,7 +6,7 @@ import { DateCarousel } from "@/components/date-carousel"
 import { LiveStreams } from "@/components/live-streams"
 import { ChannelCarousel } from "@/components/channel-carousel"
 import { TrendingList } from "@/components/trending-list"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useChannels } from "@/lib/channels-context"
 
@@ -22,11 +22,50 @@ export default function HomePage() {
   const { channels, loading } = useChannels()
   const [selectedChannelId, setSelectedChannelId] = useState<string>("")
   const router = useRouter()
+  const autoPlayIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const isUserInteractingRef = useRef(false)
+  const isHoveringLiveStreamsRef = useRef(false)
 
   // Set default selected channel when channels are loaded
   useEffect(() => {
     if (channels.length > 0 && !selectedChannelId) {
       setSelectedChannelId(channels[0].channelId)
+    }
+  }, [channels, selectedChannelId])
+
+  // 自动轮播：每5秒切换到下一个频道
+  useEffect(() => {
+    if (channels.length <= 1 || !selectedChannelId) return
+
+    // 清除之前的定时器
+    if (autoPlayIntervalRef.current) {
+      clearInterval(autoPlayIntervalRef.current)
+    }
+
+    // 设置新的定时器
+    autoPlayIntervalRef.current = setInterval(() => {
+      // 如果用户正在交互或鼠标悬停在 LiveStreams 上，跳过本次自动切换
+      if (isUserInteractingRef.current) {
+        isUserInteractingRef.current = false
+        return
+      }
+      if (isHoveringLiveStreamsRef.current) {
+        return
+      }
+
+      const currentIndex = channels.findIndex(c => c.channelId === selectedChannelId)
+      if (currentIndex !== -1) {
+        // 切换到下一个频道，如果到达末尾则循环回到第一个
+        const nextIndex = (currentIndex + 1) % channels.length
+        setSelectedChannelId(channels[nextIndex].channelId)
+      }
+    }, 3000) // 3秒
+
+    // 清理函数
+    return () => {
+      if (autoPlayIntervalRef.current) {
+        clearInterval(autoPlayIntervalRef.current)
+      }
     }
   }, [channels, selectedChannelId])
 
@@ -38,6 +77,12 @@ export default function HomePage() {
     const todayDate = getTodayDateString()
     console.log('[home] todayDate', todayDate);
     router.push(`/schedule?channel=${encodeURIComponent(channelId)}&date=${encodeURIComponent(todayDate)}`)
+  }
+
+  const handleChannelSelect = (channelId: string) => {
+    // 标记用户正在交互，暂停自动轮播一次
+    isUserInteractingRef.current = true
+    setSelectedChannelId(channelId)
   }
   
   const selectedChannel = channels.find(c => c.channelId === selectedChannelId)
@@ -55,7 +100,15 @@ export default function HomePage() {
         ) : (
           <>
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-              <div className="lg:col-span-3">
+              <div 
+                className="lg:col-span-3"
+                onMouseEnter={() => {
+                  isHoveringLiveStreamsRef.current = true
+                }}
+                onMouseLeave={() => {
+                  isHoveringLiveStreamsRef.current = false
+                }}
+              >
                 {selectedChannel && (
                   <LiveStreams 
                     channel={selectedChannel} 
@@ -72,7 +125,7 @@ export default function HomePage() {
               <ChannelCarousel
                 channels={channels}
                 selectedChannelId={selectedChannelId}
-                onChannelSelect={setSelectedChannelId}
+                onChannelSelect={handleChannelSelect}
                 onChannelClick={handleChannelClick}
               />
             </div>

@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import type { Channel } from "@/config"
 
@@ -34,6 +34,25 @@ export function ChannelCarousel({ channels, selectedChannelId, onChannelSelect, 
   const startIndex = currentPage * itemsPerPage
   const visibleChannels = channels.slice(startIndex, startIndex + itemsPerPage)
 
+  // 当 selectedChannelId 变化时，自动调整页面以确保选中的频道可见
+  useEffect(() => {
+    if (!selectedChannelId || channels.length === 0) return
+
+    const selectedIndex = channels.findIndex(c => c.channelId === selectedChannelId)
+    if (selectedIndex === -1) return
+
+    // 计算选中的频道应该在哪一页
+    const targetPage = Math.floor(selectedIndex / itemsPerPage)
+    
+    // 使用函数式更新，只在需要时切换页面
+    setCurrentPage((prevPage) => {
+      if (targetPage !== prevPage) {
+        return targetPage
+      }
+      return prevPage
+    })
+  }, [selectedChannelId, channels, itemsPerPage])
+
   const handlePrev = () => {
     setCurrentPage((prev) => Math.max(0, prev - 1))
   }
@@ -47,6 +66,11 @@ export function ChannelCarousel({ channels, selectedChannelId, onChannelSelect, 
     if (onChannelClick) {
       onChannelClick(channelId)
     }
+  }
+
+  const handleChannelHover = (channelId: string) => {
+    // 鼠标悬浮时，更新选中的频道
+    onChannelSelect(channelId)
   }
 
   return (
@@ -72,6 +96,7 @@ export function ChannelCarousel({ channels, selectedChannelId, onChannelSelect, 
             <Card
               key={channel.channelId}
               onClick={() => handleChannelClick(channel.channelId)}
+              onMouseEnter={() => handleChannelHover(channel.channelId)}
               className={cn(
                 "p-4 hover:bg-secondary/50 transition-colors cursor-pointer",
                 selectedChannelId === channel.channelId && "ring-2 ring-primary bg-secondary/30",

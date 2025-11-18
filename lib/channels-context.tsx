@@ -56,7 +56,7 @@ export function ChannelsProvider({ children }: { children: ReactNode }) {
             try {
               const params = new URLSearchParams({
                 channelId,
-                timeWindow: String(7243600), // 7 days in seconds
+                timeWindow: String(604800), // 7 days in seconds
                 pageNum: '1',
                 pageSize: '100'
               })

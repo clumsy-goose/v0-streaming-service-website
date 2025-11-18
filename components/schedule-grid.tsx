@@ -201,6 +201,10 @@ export function ScheduleGrid({ selectedDate, selectedChannel, onChannelSelect }:
     setPrograms(filteredPrograms)
   }, [selectedChannelId, selectedDate, channels])
 
+  // useEffect(()=>{
+  //   console.log("programs", programs)
+  // }, [programs])
+
   const getCurrentShow = (channel: Channel) => {
     if (!channel || !channel.playingProgram) return "Loading..."
     return channel.playingProgram.programName || "No live program"
