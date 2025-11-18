@@ -175,7 +175,7 @@ export function LiveStreams({ channel, channels, onChannelChange }: LiveStreamsP
           </div>
 
           <div className="p-6 flex flex-col justify-center space-y-4">
-            <div className="mb-20">
+            <div className="mb-auto">
               <h3 className="text-2xl font-bold">{channel.channelName}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">{channel.channelDescription}</p>
             </div>
@@ -189,7 +189,7 @@ export function LiveStreams({ channel, channels, onChannelChange }: LiveStreamsP
               <p className="text-sm text-muted-foreground mb-1">{channel.playingProgram?.programDescription || "暂无节目简介"}</p>
             </div>
 
-            <div className="mt-20">
+            <div className="mt-auto">
               <p className="text-lg font-semibold">精彩预告</p>
               <p className="text-sm text-muted-foreground mb-1">{channel.nextProgram?.programName || "暂无节目"}</p>
             </div>
