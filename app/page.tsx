@@ -47,9 +47,9 @@ export default function HomePage() {
 
         // 1. 获取所有观看量数据
         const viewsRes = await fetch('/program-views/get')
-        console.log("🚀 ~ fetchAllPrograms ~ viewsRes:", viewsRes);
+        // console.log("🚀 ~ fetchAllPrograms ~ viewsRes:", viewsRes);
         const viewsJson = await viewsRes.json()
-        console.log("🚀 ~ fetchAllPrograms ~ viewsJson:", viewsJson);
+        // console.log("🚀 ~ fetchAllPrograms ~ viewsJson:", viewsJson);
         const viewsData = viewsJson.ok ? viewsJson.data || {} : {}
         console.log("🚀 ~ fetchAllPrograms ~ viewsData:", viewsData);
 
@@ -261,8 +261,8 @@ export default function HomePage() {
                   />
                 )}
               </div>
-              <div className="lg:col-span-1 flex">
-                <TrendingList />
+              <div className="lg:col-span-1 flex min-w-0">
+                <TrendingList programs={programs} programsLoading={programsLoading} />
               </div>
             </div>
             <div className="mt-8">
