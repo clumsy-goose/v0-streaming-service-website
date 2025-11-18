@@ -1,7 +1,7 @@
 "use client"
 
 import { useSearchParams, useRouter } from "next/navigation"
-import { Suspense, useMemo, useEffect } from "react"
+import { Suspense, useMemo, useEffect, useState } from "react"
 import { VideoPlayer } from "@/components/video-player"
 import { DayPlaylist } from "@/components/day-playlist"
 import { Header } from "@/components/header"
@@ -27,6 +27,7 @@ function WatchPageContent() {
   const title = searchParams.get("title") || "Program"
   
   const { channels, loading } = useChannels()
+  const [views, setViews] = useState<number | null>(null)
 
   // Find channel from context
   const channel = useMemo(() => {
@@ -101,6 +102,39 @@ function WatchPageContent() {
     return program
   }, [channel, time, title, date])
 
+  // 记录观看量
+  useEffect(() => {
+    if (!currentProgram?.programId) return
+
+    // 防抖：使用 sessionStorage 避免同一会话中重复记录
+    const recordedKey = `viewed:${currentProgram.programId}`
+    if (sessionStorage.getItem(recordedKey)) {
+      // 已记录过，从 programs 数据中获取观看量（如果已加载）
+      // 或者可以从 /functions/program-views/get 获取所有数据
+      // 这里暂时不查询，因为首页已经获取了所有数据
+      return
+    }
+
+    // 记录观看量
+    fetch('/program-views/visit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ programId: currentProgram.programId })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.ok && data.views) {
+          setViews(data.views.total || 0)
+          // 标记已记录，避免重复统计
+          sessionStorage.setItem(recordedKey, '1')
+        }
+      })
+      .catch(err => {
+        console.error('Failed to record view:', err)
+        // 静默失败，不影响用户体验
+      })
+  }, [currentProgram?.programId])
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -169,6 +203,12 @@ function WatchPageContent() {
                 </div>
                 <span className="text-muted-foreground">•</span>
                 <span className="font-medium text-foreground">{channel.channelName}</span>
+                {views !== null && (
+                  <>
+                    <span className="text-muted-foreground">•</span>
+                    <span className="text-muted-foreground">{views} 次观看</span>
+                  </>
+                )}
               </div>
             </div>
           </div>
