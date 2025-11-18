@@ -49,7 +49,40 @@ export function ChannelsProvider({ children }: { children: ReactNode }) {
             const configChannel = channelsMap[channelName] || null
             
             // Get playback URL from Outputs[0].PlaybackURL
-            const playbackURL = apiChannel.Outputs?.[0]?.PlaybackURL || ""
+            let playbackURL = apiChannel.Outputs?.[0]?.PlaybackURL || ""
+            
+            // Special handling for ad_test2 channel (ID: 69122A121297E61CF092)
+            // Playback endpoint prefix: http://1376254607.ap-singapore.streampackage.srclivepull.myqcloud.com/v1/ssai/master/019a6ef818a315fc60e9993680afb/
+            // Need to concatenate prefix with the tail of PlaybackURL (e.g., 69122A121297E61CF092/ad2.m3u8)
+            if (channelId === "69122A121297E61CF092") {
+              const playbackEndpointPrefix = "https://1376254607.ap-singapore.streampackage.srclivepull.myqcloud.com/v1/ssai/master/019a6ef818a315fc60e9993680afb/"
+              
+              // Extract the tail from PlaybackURL
+              // The tail should be in format: "69122A121297E61CF092/ad2.m3u8"
+              let tail = playbackURL
+              
+              // If PlaybackURL is a full URL, extract the part after the last domain/path
+              // Look for the channel ID in the URL to find where the tail starts
+              const channelIdIndex = playbackURL.indexOf(channelId)
+              if (channelIdIndex !== -1) {
+                // Extract everything from channelId onwards
+                tail = playbackURL.substring(channelIdIndex)
+              } else {
+                // If channelId is not found, try to extract the last path segment
+                // Check if it already starts with channelId
+                if (!playbackURL.startsWith(channelId)) {
+                  // Extract the last part after the last '/'
+                  const lastSlashIndex = playbackURL.lastIndexOf('/')
+                  if (lastSlashIndex !== -1) {
+                    tail = channelId + '/' + playbackURL.substring(lastSlashIndex + 1)
+                  } else {
+                    tail = channelId + '/' + playbackURL
+                  }
+                }
+              }
+              
+              playbackURL = playbackEndpointPrefix + tail
+            }
             
             // Fetch program schedules for this channel
             let programs: Program[] = []
